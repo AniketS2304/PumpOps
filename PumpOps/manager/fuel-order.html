@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Fuel Order — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .order-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+    .order-status { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; border-radius: 4px; padding: 2px 7px; }
+    .order-status--pending  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+    .order-status--delivered{ background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+    .order-status--cancelled{ background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+    .fuel-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Manager Home</a>
+      <div class="top-bar__title">Fuel Order</div>
+      <div class="top-bar__subtitle">Place and track delivery orders</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- New Order Form -->
+      <div class="section-label">Place New Order</div>
+      <div style="padding:0 16px;">
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Fuel Type <span style="color:var(--red);">*</span></label>
+            <select class="form-select" id="fo-fuel">
+              <option value="MS">⛽ Petrol (MS)</option>
+              <option value="HSD">🛢 Diesel (HSD)</option>
+              <option value="Speed">🔥 Speed (Premium)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quantity <span style="color:var(--red);">*</span></label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="number" class="form-input" id="fo-qty" placeholder="0" min="1" step="100" style="flex:1;" />
+              <select class="form-select" id="fo-unit" style="width:80px;">
+                <option value="L">L</option>
+                <option value="KL">KL</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supplier <span style="color:var(--red);">*</span></label>
+            <select class="form-select" id="fo-supplier">
+              <option>BPCL Distributor — Pune</option>
+              <option>HP Petroleum — Pune</option>
+              <option>IOC Depot — Pune</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expected Delivery Date <span style="color:var(--red);">*</span></label>
+            <input type="date" class="form-input" id="fo-date" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Notes (optional)</label>
+            <input type="text" class="form-input" id="fo-notes" placeholder="e.g. Urgent — T-3 low stock…" style="font-size:13px;" />
+          </div>
+        </div>
+        <button class="btn btn--primary" style="margin-top:8px;" onclick="placeOrder()">📦 Place Order</button>
+      </div>
+
+      <!-- Order List -->
+      <div class="section-label">Orders</div>
+      <div style="padding:0 16px 24px;" id="order-list"></div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('fo-date').value = tomorrow.toISOString().split('T')[0];
+
+    let orders = JSON.parse(localStorage.getItem('pumpops_orders') || 'null') || MOCK.fuelOrders;
+
+    const fuelColors = { MS: '#16a34a', HSD: '#2563eb', Speed: '#d97706' };
+    const fuelIcons  = { MS: '⛽', HSD: '🛢', Speed: '🔥' };
+
+    function placeOrder() {
+      const fuel = document.getElementById('fo-fuel').value;
+      const qty = parseFloat(document.getElementById('fo-qty').value);
+      const unit = document.getElementById('fo-unit').value;
+      const supplier = document.getElementById('fo-supplier').value;
+      const date = document.getElementById('fo-date').value;
+      const notes = document.getElementById('fo-notes').value.trim();
+      if (!qty || qty <= 0) { APP.showToast('Enter a valid quantity', 'error'); return; }
+      if (!date) { APP.showToast('Select delivery date', 'error'); return; }
+      const d = new Date(date);
+      orders.unshift({
+        id: 'FO-' + Date.now(),
+        fuelType: fuel, quantity: qty, unit,
+        supplier, expectedDate: d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }),
+        status: 'PENDING',
+        orderedBy: 'Rajesh Joshi',
+        orderedAt: new Date().toISOString(),
+        notes,
+      });
+      localStorage.setItem('pumpops_orders', JSON.stringify(orders));
+      APP.showToast('Order placed!', 'success');
+      renderOrders();
+      document.getElementById('fo-qty').value = '';
+      document.getElementById('fo-notes').value = '';
+    }
+
+    function markDelivered(id) {
+      const o = orders.find(x => x.id === id);
+      if (o) { o.status = 'DELIVERED'; o.deliveredAt = APP.nowAmPm(); }
+      localStorage.setItem('pumpops_orders', JSON.stringify(orders));
+      renderOrders();
+      APP.showToast('Marked as delivered', 'success');
+    }
+
+    function renderOrders() {
+      const container = document.getElementById('order-list');
+      if (!orders.length) {
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:16px;">No orders placed</div>';
+        return;
+      }
+      container.innerHTML = orders.map(o => {
+        const statusCls = { PENDING:'order-status--pending', DELIVERED:'order-status--delivered', CANCELLED:'order-status--cancelled' }[o.status] || '';
+        const ordDate = new Date(o.orderedAt);
+        const ordStr = ordDate.toLocaleDateString('en-IN', { day:'numeric', month:'short' }) + ' · ' + ordDate.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+        return `
+          <div class="order-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:20px;">${fuelIcons[o.fuelType]||'⛽'}</span>
+                <div>
+                  <div style="font-weight:800;font-size:15px;color:${fuelColors[o.fuelType]||'inherit'};">
+                    ${o.fuelType === 'MS' ? 'Petrol (MS)' : o.fuelType === 'HSD' ? 'Diesel (HSD)' : 'Speed (Premium)'}
+                  </div>
+                  <div style="font-size:13px;font-weight:700;">${o.quantity.toLocaleString('en-IN')} ${o.unit}</div>
+                </div>
+              </div>
+              <span class="order-status ${statusCls}">${o.status}</span>
+            </div>
+            <div class="row" style="padding:4px 0;">
+              <span class="row__label">Supplier</span>
+              <span class="row__value" style="font-size:12px;">${o.supplier}</span>
+            </div>
+            <div class="row" style="padding:4px 0;">
+              <span class="row__label">Expected</span>
+              <span class="row__value">${o.expectedDate}</span>
+            </div>
+            <div class="row" style="padding:4px 0;border-bottom:none;">
+              <span class="row__label">Ordered</span>
+              <span class="row__value" style="font-size:11px;">${ordStr} · ${o.orderedBy}</span>
+            </div>
+            ${o.notes ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${o.notes}</div>` : ''}
+            ${o.status === 'PENDING' ? `
+              <button class="btn btn--success btn--sm" style="margin-top:10px;width:100%;" onclick="markDelivered('${o.id}')">✓ Mark as Delivered</button>` : ''}
+            ${o.status === 'DELIVERED' && o.deliveredAt ? `<div style="font-size:11px;color:var(--green);margin-top:6px;">✓ Delivered at ${o.deliveredAt}</div>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    renderOrders();
+  </script>
+</body>
+</html>

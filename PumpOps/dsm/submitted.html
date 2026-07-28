@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Submitted — PumpOps DSM</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .success-icon {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--green-bg);
+      border: 3px solid var(--green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame" style="display:flex;flex-direction:column;justify-content:center;min-height:100dvh;">
+    <div style="padding:32px 24px; text-align:center;">
+      <div class="success-icon">✓</div>
+      <div style="font-size:22px;font-weight:800;color:var(--text-primary);">Shift Submitted!</div>
+      <div style="font-size:14px;color:var(--text-muted);margin-top:8px;line-height:1.6;">
+        Your shift data has been submitted to the Shift Manager.<br/>
+        Out-Time has been recorded.
+      </div>
+
+      <div class="card card--compact" style="margin:24px 0; text-align:left;">
+        <div class="row">
+          <span class="row__label">DSM</span>
+          <span class="row__value">Amit Kumar</span>
+        </div>
+        <div class="row">
+          <span class="row__label">Out-Time</span>
+          <span class="row__value text-green" id="out-time"></span>
+        </div>
+        <div class="row">
+          <span class="row__label">Shift</span>
+          <span class="row__value">Morning · 06:00 – 14:00</span>
+        </div>
+        <div class="row">
+          <span class="row__label">Status</span>
+          <span class="badge badge--amber">Pending Verification</span>
+        </div>
+        <div class="row" style="border-bottom:none;">
+          <span class="row__label">Sync</span>
+          <span class="sync-status sync-status--online" style="font-size:11px;">✓ Synced</span>
+        </div>
+      </div>
+
+      <div class="alert alert--blue" style="text-align:left;margin-bottom:20px;">
+        <span class="alert__icon">ℹ</span>
+        <span style="font-size:13px;">The Shift Manager will review and verify your entries. You will be notified if there are corrections.</span>
+      </div>
+
+      <a href="home.html" class="btn btn--primary">Back to Home</a>
+      <a href="../login.html" class="btn btn--ghost" style="margin-top:8px;">Sign Out</a>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    document.getElementById('out-time').textContent = APP.nowAmPm() + ' ✓';
+  </script>
+</body>
+</html>

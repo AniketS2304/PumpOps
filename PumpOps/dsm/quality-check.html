@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Quality Check — PumpOps DSM</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .check-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .check-row:last-child { border-bottom: none; }
+    .toggle-btn {
+      display: flex; border-radius: 6px; overflow: hidden;
+      border: 1.5px solid var(--border-mid);
+    }
+    .toggle-btn button {
+      padding: 5px 14px; font-size: 12px; font-weight: 700;
+      border: none; background: var(--surface); cursor: pointer;
+      color: var(--text-muted); transition: all .15s;
+    }
+    .toggle-btn button.pass { background: var(--green); color: #fff; }
+    .toggle-btn button.fail { background: var(--red); color: #fff; }
+    .history-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .history-row:last-child { border-bottom: none; }
+    .timer-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 700;
+    }
+    .timer-badge--ok { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .timer-badge--warn { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+    .timer-badge--due { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← DSM Home</a>
+      <div class="top-bar__title">Fuel Quality Check</div>
+      <div class="top-bar__subtitle">Log every 2 hours — all nozzles</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- Timer Status -->
+      <div style="padding:12px 16px 0;">
+        <div class="card card--compact" style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text-muted);">Last Quality Check</div>
+            <div style="font-size:14px;font-weight:700;margin-top:2px;" id="last-check-time">No check logged yet</div>
+          </div>
+          <div id="timer-badge" class="timer-badge timer-badge--due">Due Now</div>
+        </div>
+      </div>
+
+      <!-- Quality Check Form -->
+      <div class="section-label">New Quality Check</div>
+      <div style="padding:0 16px;">
+        <div class="alert alert--blue" style="margin-bottom:10px;">
+          <span class="alert__icon">ℹ</span>
+          <span style="font-size:13px;">Check colour, clarity, and measure density for each nozzle. Mark pass or fail.</span>
+        </div>
+        <div id="check-form-container">
+          <!-- dynamically rendered -->
+        </div>
+        <!-- Notes -->
+        <div class="form-group" style="margin-top:4px;">
+          <label class="form-label">Notes (optional)</label>
+          <input type="text" class="form-input" id="qc-notes" placeholder="e.g. All clear, turbid sample on N02…" style="font-size:13px;" />
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;font-size:13px;color:var(--text-muted);">
+            <span id="qc-timestamp">Timestamp: <span class="js-time"></span></span>
+          </div>
+          <button class="btn btn--primary" onclick="submitQualityCheck()">✓ Submit Check</button>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="section-label">Check History (Today)</div>
+      <div style="padding:0 16px 16px;">
+        <div class="card" id="qc-history">
+          <!-- dynamically rendered -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.startClock('.js-time');
+
+    const state = APP.getState();
+    const nozzleIds = state.nozzleIds || ['N01', 'N02'];
+    // Map nozzle IDs to full nozzle objects from MOCK
+    const allNozzles = MOCK.mpds.flatMap(m => m.nozzles);
+    const assignedNozzles = nozzleIds.map(id => allNozzles.find(n => n.id === id)).filter(Boolean);
+
+    // Fall back to MPD01 nozzles if no state
+    const nozzles = assignedNozzles.length ? assignedNozzles : MOCK.mpds[0].nozzles;
+
+    // Per-nozzle check state
+    const checkState = {};
+    nozzles.forEach(n => {
+      checkState[n.id] = { colour: true, clarity: true, density: '', pass: true };
+    });
+
+    (function init() {
+      renderCheckForm();
+      renderHistory();
+      updateTimerBadge();
+    })();
+
+    function updateTimerBadge() {
+      const mins = APP.minutesSinceLastCheck();
+      const last = APP.getLastQualityCheck();
+      const badge = document.getElementById('timer-badge');
+      const lastTime = document.getElementById('last-check-time');
+      if (!last) {
+        badge.className = 'timer-badge timer-badge--due';
+        badge.textContent = '⚠ Due Now';
+        lastTime.textContent = 'No check logged yet';
+        return;
+      }
+      const t = new Date(last.timestamp);
+      lastTime.textContent = t.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+      if (mins < 90) {
+        badge.className = 'timer-badge timer-badge--ok';
+        badge.textContent = `✓ ${mins} min ago`;
+      } else if (mins < 120) {
+        badge.className = 'timer-badge timer-badge--warn';
+        badge.textContent = `⚠ ${mins} min ago`;
+      } else {
+        badge.className = 'timer-badge timer-badge--due';
+        badge.textContent = `🔴 Overdue ${mins} min`;
+      }
+    }
+
+    function renderCheckForm() {
+      document.getElementById('check-form-container').innerHTML = nozzles.map(n => `
+        <div class="card" style="margin-bottom:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span class="badge ${APP.getGradeBadgeClass(n.grade)}">${n.grade}</span>
+            <span style="font-weight:700;font-size:14px;">${n.label} — ${n.id}</span>
+          </div>
+          <div class="check-row">
+            <span style="font-size:13px;font-weight:600;">Colour</span>
+            <div class="toggle-btn">
+              <button id="colour-pass-${n.id}" class="pass" onclick="setCheck('${n.id}','colour',true)">Pass</button>
+              <button id="colour-fail-${n.id}" onclick="setCheck('${n.id}','colour',false)">Fail</button>
+            </div>
+          </div>
+          <div class="check-row">
+            <span style="font-size:13px;font-weight:600;">Clarity</span>
+            <div class="toggle-btn">
+              <button id="clarity-pass-${n.id}" class="pass" onclick="setCheck('${n.id}','clarity',true)">Pass</button>
+              <button id="clarity-fail-${n.id}" onclick="setCheck('${n.id}','clarity',false)">Fail</button>
+            </div>
+          </div>
+          <div class="check-row" style="border-bottom:none;">
+            <span style="font-size:13px;font-weight:600;">Density (kg/L)</span>
+            <input type="number" step="0.001" min="0.7" max="0.95"
+              id="density-${n.id}" class="form-input" style="width:110px;font-size:14px;padding:7px 10px;"
+              placeholder="0.000" oninput="checkState['${n.id}'].density=this.value" />
+          </div>
+        </div>`).join('');
+    }
+
+    function setCheck(nId, field, val) {
+      checkState[nId][field] = val;
+      const passBtn = document.getElementById(field + '-pass-' + nId);
+      const failBtn = document.getElementById(field + '-fail-' + nId);
+      passBtn.className = val ? 'pass' : '';
+      failBtn.className = !val ? 'fail' : '';
+    }
+
+    function submitQualityCheck() {
+      const checks = nozzles.map(n => ({
+        nozzle: n.id,
+        grade: n.grade,
+        colour: checkState[n.id].colour,
+        clarity: checkState[n.id].clarity,
+        density: checkState[n.id].density,
+        pass: checkState[n.id].colour && checkState[n.id].clarity,
+      }));
+      const allPass = checks.every(c => c.pass);
+      const entry = {
+        id: 'QC-' + Date.now(),
+        timestamp: new Date().toISOString(),
+        dsmId: 'D01',
+        dsmName: state.dsmName || 'Amit Kumar',
+        checks,
+        notes: document.getElementById('qc-notes').value.trim(),
+      };
+      const history = APP.getQualityChecks();
+      history.push(entry);
+      APP.saveQualityChecks(history);
+      if (allPass) {
+        APP.showToast('Quality check passed — all nozzles OK', 'success');
+      } else {
+        APP.showToast('⚠ Quality check has FAIL items — notify manager!', 'error');
+      }
+      document.getElementById('qc-notes').value = '';
+      updateTimerBadge();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const history = APP.getQualityChecks();
+      const container = document.getElementById('qc-history');
+      if (!history.length) {
+        container.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px;">No checks logged today</div>';
+        return;
+      }
+      container.innerHTML = [...history].reverse().map(e => {
+        const t = new Date(e.timestamp);
+        const timeStr = t.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+        const allPass = e.checks.every(c => c.pass);
+        return `
+          <div class="history-row">
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-weight:700;font-size:13px;">${timeStr}</span>
+                <span class="badge ${allPass ? 'badge--green' : 'badge--red'}">${allPass ? '✓ PASS' : '✗ FAIL'}</span>
+              </div>
+              <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+                ${e.checks.map(c => `
+                  <div style="font-size:11px;font-weight:600;color:${c.pass?'var(--green)':'var(--red)'};">
+                    ${c.nozzle} ${c.grade}: ${c.pass ? '✓' : '✗'}${c.density ? ' ' + c.density : ''}
+                  </div>`).join('')}
+              </div>
+              ${e.notes ? `<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">${e.notes}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

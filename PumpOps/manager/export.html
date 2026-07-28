@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Export Data — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .export-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .export-table th { background: var(--brand); color: #fff; padding: 7px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+    .export-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .export-table tr:last-child td { border-bottom: none; }
+    .export-table tr:hover td { background: var(--surface-2); }
+    .export-section { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 0 16px 12px; }
+    .export-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .chip-select { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .chip-sel {
+      padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--border); cursor: pointer;
+      color: var(--text-secondary); background: var(--surface); transition: all .15s;
+    }
+    .chip-sel.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Manager Home</a>
+      <div class="top-bar__title">Export Data</div>
+      <div class="top-bar__subtitle">DSM-wise · Grade-wise · Credit</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- Filters -->
+      <div class="section-label">Export Options</div>
+      <div style="padding:0 16px;">
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Report Type</label>
+            <div class="chip-select" id="type-chips">
+              <span class="chip-sel active" data-type="dsm" onclick="selectType('dsm',this)">Per-DSM Sales</span>
+              <span class="chip-sel" data-type="grade" onclick="selectType('grade',this)">Grade-wise Total</span>
+              <span class="chip-sel" data-type="credit" onclick="selectType('credit',this)">Credit Customers</span>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Shift</label>
+            <div class="chip-select" id="shift-chips">
+              <span class="chip-sel active" data-shift="all" onclick="selectShift('all',this)">All</span>
+              <span class="chip-sel" data-shift="Morning" onclick="selectShift('Morning',this)">Morning</span>
+              <span class="chip-sel" data-shift="Evening" onclick="selectShift('Evening',this)">Evening</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn--primary" style="margin-top:8px;" onclick="generateExport()">📊 Generate Report</button>
+      </div>
+
+      <!-- Output -->
+      <div id="export-output" class="hidden">
+        <div class="section-label" id="export-title">Report</div>
+        <div class="export-section">
+          <div class="export-scroll">
+            <table class="export-table" id="export-table"></table>
+          </div>
+        </div>
+        <div style="padding:0 16px 16px;">
+          <button class="btn btn--ghost" onclick="copyTable()">📋 Copy as Text</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    let currentType = 'dsm';
+    let currentShift = 'all';
+
+    function selectType(type, el) {
+      currentType = type;
+      document.querySelectorAll('#type-chips .chip-sel').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    }
+    function selectShift(shift, el) {
+      currentShift = shift;
+      document.querySelectorAll('#shift-chips .chip-sel').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    const gradeLabel = { MS: 'Petrol (MS)', HSD: 'Diesel (HSD)', Speed: 'Speed' };
+    const gradeColor = { MS: '#16a34a', HSD: '#2563eb', Speed: '#d97706' };
+
+    function generateExport() {
+      const table = document.getElementById('export-table');
+      const titleEl = document.getElementById('export-title');
+      document.getElementById('export-output').classList.remove('hidden');
+
+      if (currentType === 'dsm') {
+        titleEl.textContent = 'Per-DSM Sales Report · 27 Jul 2026';
+        const dsms = MOCK.dsms.filter(d => {
+          if (currentShift === 'all') return true;
+          const isM = d.inTime && d.inTime < '14:00';
+          return currentShift === 'Morning' ? isM : !isM;
+        });
+        table.innerHTML = `
+          <thead><tr>
+            <th>DSM</th><th>MPD</th><th>In / Out</th><th>⛽ MS (L)</th><th>🔥 Spd (L)</th><th>🛢 HSD (L)</th><th>Total ₹</th><th>Short</th>
+          </tr></thead>
+          <tbody>
+            ${dsms.map(d => {
+              const mpd = MOCK.mpds.find(m => m.id === d.mpd);
+              const nozzles = mpd ? mpd.nozzles.filter(n => d.nozzles.includes(n.id)) : [];
+              const byGrade = {};
+              nozzles.forEach(n => {
+                const net = (n.closing - n.opening) - n.testing;
+                byGrade[n.grade] = (byGrade[n.grade] || 0) + net;
+              });
+              const totalSale = Object.entries(byGrade).reduce((s, [g, l]) => {
+                const rate = MOCK.grades.find(gr => gr.code === g)?.rate || 0;
+                return s + l * rate;
+              }, 0);
+              return `<tr>
+                <td><strong>${d.name}</strong><div style="font-size:10px;color:#64748b;">${d.initials}</div></td>
+                <td>${d.mpd}</td>
+                <td style="white-space:nowrap;">${d.inTime||'—'}<br/>${d.outTime||'—'}</td>
+                <td style="color:#16a34a;font-weight:700;">${(byGrade.MS||0).toFixed(2)}</td>
+                <td style="color:#d97706;font-weight:700;">${(byGrade.Speed||0).toFixed(2)}</td>
+                <td style="color:#2563eb;font-weight:700;">${(byGrade.HSD||0).toFixed(2)}</td>
+                <td style="font-weight:800;">${PO.formatINR(totalSale)}</td>
+                <td style="color:${d.payDiff < 0 ? 'var(--red)' : 'var(--green)'};">${d.payDiff ? PO.formatINR(Math.abs(d.payDiff)) : '₹0'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>`;
+
+      } else if (currentType === 'grade') {
+        titleEl.textContent = 'Grade-wise Total Report · 27 Jul 2026';
+        const byGrade = { MS: 0, Speed: 0, HSD: 0 };
+        MOCK.mpds.forEach(mpd => mpd.nozzles.forEach(n => {
+          const net = (n.closing - n.opening) - n.testing;
+          byGrade[n.grade] = (byGrade[n.grade] || 0) + net;
+        }));
+        const rows = Object.entries(byGrade).map(([g, litres]) => {
+          const rate = MOCK.grades.find(gr => gr.code === g)?.rate || 0;
+          const amount = litres * rate;
+          return { grade: g, litres, rate, amount };
+        });
+        const grandTotal = rows.reduce((s, r) => s + r.amount, 0);
+        table.innerHTML = `
+          <thead><tr><th>Grade</th><th>Net Litres</th><th>Rate</th><th>Amount</th></tr></thead>
+          <tbody>
+            ${rows.map(r => `<tr>
+              <td><strong style="color:${gradeColor[r.grade]}">${gradeLabel[r.grade]||r.grade}</strong></td>
+              <td>${r.litres.toFixed(2)} L</td>
+              <td>₹${r.rate.toFixed(2)}</td>
+              <td><strong>${PO.formatINR(r.amount)}</strong></td>
+            </tr>`).join('')}
+            <tr style="background:var(--surface-2);">
+              <td colspan="3"><strong>Grand Total</strong></td>
+              <td><strong style="color:var(--brand);">${PO.formatINR(grandTotal)}</strong></td>
+            </tr>
+          </tbody>`;
+
+      } else if (currentType === 'credit') {
+        titleEl.textContent = 'Credit Customer Report · 27 Jul 2026';
+        table.innerHTML = `
+          <thead><tr><th>Customer</th><th>Vehicle</th><th>Grade</th><th>Qty (L)</th><th>Amount</th><th>DSM</th><th>Time</th></tr></thead>
+          <tbody>
+            ${MOCK.creditTransactions.map(t => {
+              const c = MOCK.creditCustomers.find(cu => cu.id === t.customerId);
+              return `<tr>
+                <td><strong>${c ? c.name : t.customerId}</strong></td>
+                <td style="white-space:nowrap;">${t.vehicle}</td>
+                <td style="color:${gradeColor[t.product]||'inherit'};font-weight:700;">${gradeLabel[t.product]||t.product}</td>
+                <td>${t.qty.toFixed(2)}</td>
+                <td><strong>${PO.formatINR(t.amount)}</strong></td>
+                <td>${t.dsm}</td>
+                <td>${t.time}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>`;
+      }
+      document.getElementById('export-output').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyTable() {
+      const table = document.getElementById('export-table');
+      const rows = [];
+      table.querySelectorAll('tr').forEach(tr => {
+        rows.push([...tr.querySelectorAll('th,td')].map(c => c.innerText.replace(/\n/g,' ')).join('\t'));
+      });
+      navigator.clipboard?.writeText(rows.join('\n')).then(() => APP.showToast('Copied to clipboard', 'success')).catch(() => APP.showToast('Copy failed', 'error'));
+    }
+  </script>
+</body>
+</html>

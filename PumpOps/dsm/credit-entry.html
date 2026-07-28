@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Credit Customer Entry — PumpOps DSM</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .credit-entry-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    .credit-entry-row:last-child { border-bottom: none; }
+    .credit-entry-del {
+      color: var(--red); font-size: 18px; cursor: pointer;
+      background: none; border: none; padding: 0 4px; flex-shrink:0;
+    }
+    .grade-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; margin-right: 4px;
+    }
+    .customer-tag {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      background: var(--blue-bg); color: var(--blue);
+      border: 1px solid var(--blue-border);
+      border-radius: 4px; padding: 1px 6px;
+    }
+    .section-total {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface-2);
+      border-top: 2px solid var(--border-mid);
+      border-radius: 0 0 12px 12px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← DSM Home</a>
+      <div class="top-bar__title">Credit Customer Entry</div>
+      <div class="top-bar__subtitle">Vehicle-wise — separate from regular sales</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- Info Banner -->
+      <div style="padding:12px 16px 0;">
+        <div class="alert alert--blue">
+          <span class="alert__icon">ℹ</span>
+          <span style="font-size:13px;">Enter each credit sale vehicle-wise. These are tracked separately from regular cash/UPI payments and reported to the Shift Manager.</span>
+        </div>
+      </div>
+
+      <!-- Add Entry Form -->
+      <div class="section-label">New Credit Sale</div>
+      <div style="padding:0 16px;">
+        <div class="card">
+          <!-- Customer -->
+          <div class="form-group">
+            <label class="form-label">Credit Customer <span style="color:var(--red);">*</span></label>
+            <select class="form-select" id="ce-customer" onchange="onCustomerChange()">
+              <option value="">— Select customer —</option>
+            </select>
+          </div>
+          <!-- Outstanding Alert -->
+          <div id="ce-outstanding" class="hidden" style="margin-bottom:10px;">
+            <div class="alert alert--amber" style="padding:7px 12px;">
+              <span>⚠</span>
+              <span id="ce-outstanding-text" style="font-size:12px;"></span>
+            </div>
+          </div>
+          <!-- Vehicle -->
+          <div class="form-group">
+            <label class="form-label">Vehicle Number <span style="color:var(--red);">*</span></label>
+            <select class="form-select" id="ce-vehicle">
+              <option value="">— Select vehicle —</option>
+            </select>
+          </div>
+          <!-- Fuel Grade -->
+          <div class="form-group">
+            <label class="form-label">Fuel Grade <span style="color:var(--red);">*</span></label>
+            <select class="form-select" id="ce-grade" onchange="updateCreditRate()">
+              <option value="MS">⛽ Petrol (MS)</option>
+              <option value="HSD">🛢 Diesel (HSD)</option>
+              <option value="Speed">🔥 Speed (Premium)</option>
+            </select>
+          </div>
+          <!-- Quantity -->
+          <div class="form-group">
+            <label class="form-label">Quantity (Litres) <span style="color:var(--red);">*</span></label>
+            <input type="number" class="form-input" id="ce-qty" placeholder="0.00" step="0.01" min="0.01" oninput="updateCreditCalc()" />
+          </div>
+          <!-- Rate (locked) -->
+          <div class="form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <label class="form-label" style="margin:0;">Rate (₹/L)</label>
+              <span class="field-badge field-badge--source">SHIFT PRICE</span>
+            </div>
+            <div class="source-field">
+              <span class="source-field__value" id="ce-rate-display">₹104.72</span>
+              <span style="font-size:12px;color:var(--text-muted);">/L</span>
+            </div>
+          </div>
+          <!-- Amount (auto) -->
+          <div class="form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <label class="form-label" style="margin:0;">Amount (₹)</label>
+              <span class="field-badge field-badge--auto">AUTO</span>
+            </div>
+            <div class="calc-field">
+              <span class="calc-field__value" id="ce-amount-display">₹—</span>
+            </div>
+          </div>
+          <!-- Note -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Note (optional)</label>
+            <input type="text" class="form-input" id="ce-note" placeholder="e.g. Partial fill, emergency supply…" style="font-size:13px;" />
+          </div>
+        </div>
+        <button class="btn btn--primary" style="margin-top:8px;" onclick="addCreditEntry()">➕ Add Credit Entry</button>
+      </div>
+
+      <!-- Entries List -->
+      <div class="section-label">Credit Entries This Shift</div>
+      <div style="padding:0 16px 16px;">
+        <div class="card" style="padding:0;">
+          <div id="credit-list" style="padding:0 14px;">
+            <!-- dynamically rendered -->
+          </div>
+          <div class="section-total">
+            <span>Total Credit Amount</span>
+            <div style="text-align:right;">
+              <div style="font-size:18px;color:var(--brand);" id="credit-total">₹0.00</div>
+              <span class="field-badge field-badge--auto">AUTO</span>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert--blue" style="margin-top:8px;">
+          <span class="alert__icon">ℹ</span>
+          <span style="font-size:12px;">Credit sales are reported separately to the Shift Manager and do not affect your regular payment balance.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const prices = APP.getPrices();
+    let currentRate = prices.MS;
+    let creditEntries = APP.getCreditEntries();
+    let nextId = creditEntries.length ? Math.max(...creditEntries.map(e => e.id)) + 1 : 1;
+
+    // Populate customer dropdown
+    (function init() {
+      const sel = document.getElementById('ce-customer');
+      MOCK.creditCustomers.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        sel.appendChild(opt);
+      });
+      updateCreditRate();
+      renderCreditList();
+    })();
+
+    function onCustomerChange() {
+      const cId = document.getElementById('ce-customer').value;
+      const cust = MOCK.creditCustomers.find(c => c.id === cId);
+      const vSel = document.getElementById('ce-vehicle');
+      const outDiv = document.getElementById('ce-outstanding');
+      vSel.innerHTML = '<option value="">— Select vehicle —</option>';
+      if (!cust) { outDiv.classList.add('hidden'); return; }
+      cust.vehicles.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v; opt.textContent = v;
+        vSel.appendChild(opt);
+      });
+      const util = PO.calculateCreditUtilization(cust.outstanding, cust.limit);
+      document.getElementById('ce-outstanding-text').textContent =
+        `Outstanding: ${PO.formatINR(cust.outstanding)} of ${PO.formatINR(cust.limit)} limit (${util}% used)`;
+      outDiv.classList.remove('hidden');
+    }
+
+    function updateCreditRate() {
+      const grade = document.getElementById('ce-grade').value;
+      currentRate = prices[grade] || 104.72;
+      document.getElementById('ce-rate-display').textContent = '₹' + currentRate.toFixed(2);
+      updateCreditCalc();
+    }
+
+    function updateCreditCalc() {
+      const qty = parseFloat(document.getElementById('ce-qty').value) || 0;
+      const amount = PO.calculateSaleAmount(qty, currentRate);
+      document.getElementById('ce-amount-display').textContent = amount ? PO.formatINR(amount) : '₹—';
+    }
+
+    function addCreditEntry() {
+      const custId = document.getElementById('ce-customer').value;
+      const vehicle = document.getElementById('ce-vehicle').value;
+      const grade = document.getElementById('ce-grade').value;
+      const qty = parseFloat(document.getElementById('ce-qty').value);
+      const note = document.getElementById('ce-note').value.trim();
+      if (!custId) { APP.showToast('Select a customer', 'error'); return; }
+      if (!vehicle) { APP.showToast('Select a vehicle', 'error'); return; }
+      if (!qty || qty <= 0) { APP.showToast('Enter a valid quantity', 'error'); return; }
+      const cust = MOCK.creditCustomers.find(c => c.id === custId);
+      const amount = PO.calculateSaleAmount(qty, currentRate);
+      creditEntries.push({
+        id: nextId++,
+        customerId: custId,
+        customerName: cust ? cust.name : custId,
+        vehicle,
+        grade,
+        qty,
+        rate: currentRate,
+        amount,
+        note,
+        time: APP.nowAmPm(),
+      });
+      APP.saveCreditEntries(creditEntries);
+      renderCreditList();
+      // Reset form
+      document.getElementById('ce-customer').value = '';
+      document.getElementById('ce-vehicle').innerHTML = '<option value="">— Select vehicle —</option>';
+      document.getElementById('ce-qty').value = '';
+      document.getElementById('ce-note').value = '';
+      document.getElementById('ce-outstanding').classList.add('hidden');
+      document.getElementById('ce-amount-display').textContent = '₹—';
+      APP.showToast('Credit entry added', 'success');
+    }
+
+    function removeCreditEntry(id) {
+      creditEntries = creditEntries.filter(e => e.id !== id);
+      APP.saveCreditEntries(creditEntries);
+      renderCreditList();
+    }
+
+    const gradeColors = { MS: '#16a34a', HSD: '#2563eb', Speed: '#d97706' };
+
+    function renderCreditList() {
+      const list = document.getElementById('credit-list');
+      if (!creditEntries.length) {
+        list.innerHTML = '<div style="padding:16px 0;text-align:center;color:var(--text-muted);font-size:13px;">No credit entries yet</div>';
+        document.getElementById('credit-total').textContent = '₹0.00';
+        return;
+      }
+      list.innerHTML = creditEntries.map(e => `
+        <div class="credit-entry-row">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span class="customer-tag">${e.customerName}</span>
+              <span style="font-size:12px;font-weight:600;color:${gradeColors[e.grade]||'var(--text-primary)'};">● ${e.grade}</span>
+            </div>
+            <div style="font-size:13px;font-weight:600;margin-top:2px;">${e.vehicle}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">
+              ${e.qty.toFixed(2)} L × ₹${e.rate.toFixed(2)}/L · ${e.time}
+              ${e.note ? `<div>${e.note}</div>` : ''}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-weight:800;font-size:14px;">${PO.formatINR(e.amount)}</div>
+            <button class="credit-entry-del" onclick="removeCreditEntry(${e.id})">✕</button>
+          </div>
+        </div>`).join('');
+      const total = creditEntries.reduce((s, e) => s + (e.amount || 0), 0);
+      document.getElementById('credit-total').textContent = PO.formatINR(total);
+    }
+  </script>
+</body>
+</html>

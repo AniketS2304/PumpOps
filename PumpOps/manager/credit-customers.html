@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Credit Customers — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__title">Credit Customers</div>
+      <div class="top-bar__subtitle">Total outstanding: ₹1,52,700</div>
+    </header>
+
+    <div class="filter-bar">
+      <span class="filter-pill filter-pill--active">All</span>
+      <span class="filter-pill">Overdue</span>
+      <span class="filter-pill">0–7 Days</span>
+      <span class="filter-pill">8–30 Days</span>
+      <span class="filter-pill">30+ Days</span>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+      <div style="padding:8px 16px; display:flex; flex-direction:column; gap:10px;" id="customer-list"></div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const customers = MOCK.creditCustomers;
+
+    function renderCustomers() {
+      const list = document.getElementById('customer-list');
+      list.innerHTML = customers.map(c => {
+        const util = PO.calculateCreditUtilization(c.outstanding, c.limit);
+        const available = PO.calculateCreditAvailable(c.limit, c.outstanding);
+        const barClass = util >= 90 ? 'progress-bar__fill--red' : util >= 75 ? 'progress-bar__fill--amber' : '';
+        const ageColor = c.oldestAgeDays > 30 ? 'var(--red)' : c.oldestAgeDays > 7 ? 'var(--amber)' : 'var(--green)';
+        const overdueBadge = c.overdueAmount > 0 ? `<span class="badge badge--red" style="margin-left:6px;">OVERDUE ₹${(c.overdueAmount/1000).toFixed(0)}k</span>` : '';
+
+        return `
+          <div class="card">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+              <div>
+                <div style="font-size:15px;font-weight:800;">${c.name}${overdueBadge}</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Oldest invoice: <span style="color:${ageColor};font-weight:600;">${c.oldestAgeDays} days</span></div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">Outstanding</div>
+                <div style="font-size:16px;font-weight:800;color:${c.outstanding > c.limit * 0.8 ? 'var(--amber)' : 'var(--text-primary)'};">${(c.outstanding/1000).toFixed(1)}k</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">Limit</div>
+                <div style="font-size:16px;font-weight:800;">${(c.limit/1000).toFixed(0)}k</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">Available</div>
+                <div style="font-size:16px;font-weight:800;color:var(--green);">${(available/1000).toFixed(1)}k</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:6px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:11px;color:var(--text-muted);">Credit utilization</span>
+                <span style="font-size:11px;font-weight:700;color:${util>=90?'var(--red)':util>=75?'var(--amber)':'var(--text-secondary)'};">${util}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-bar__fill ${barClass}" style="width:${Math.min(100,util)}%"></div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:6px;margin-top:10px;">
+              <button class="btn btn--ghost btn--sm" style="flex:1;font-size:11px;">View Ledger</button>
+              <a href="credit-sales.html" class="btn btn--secondary btn--sm" style="flex:1;font-size:11px;">New Sale</a>
+              <button class="btn btn--primary btn--sm" style="flex:1;font-size:11px;" onclick="APP.showToast('Payment recorded','success')">Payment</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderCustomers();
+    APP.initFilterPills('.filter-bar');
+  </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Active Shift — PumpOps DSM</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__meta" style="margin-top:4px;">
+        <div>
+          <div class="top-bar__title">Shift Active</div>
+          <div class="top-bar__subtitle" id="shift-sub-title">Morning · 06:00 – 14:00 &nbsp;·&nbsp; MPD 01</div>
+        </div>
+        <span class="badge badge--blue" style="font-size:11px; padding:4px 10px;">● LIVE</span>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Sync + Time -->
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px;">
+        <span class="sync-status sync-status--online js-sync-badge">● Online</span>
+        <span style="font-size:12px; color:var(--text-muted);">In-Time: <strong id="val-intime">06:02 AM</strong></span>
+      </div>
+
+      <!-- DSM Info -->
+      <div style="padding:0 16px;">
+        <div class="card" style="border-left:3px solid var(--brand);">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <div class="text-xs text-muted fw-700" style="text-transform:uppercase;letter-spacing:.06em;">DSM</div>
+              <div style="font-size:15px;font-weight:700;margin-top:2px;" id="val-dsm-name">Amit Kumar</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted fw-700" style="text-transform:uppercase;letter-spacing:.06em;">MPD / Bays</div>
+              <div style="font-size:15px;font-weight:700;margin-top:2px;" id="val-mpd-bays">MPD 01 · 1 &amp; 2</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Nozzle Status -->
+      <div class="section-label">Assigned Nozzles</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact" id="nozzles-active-container">
+          <!-- dynamically rendered -->
+        </div>
+      </div>
+
+      <!-- Opening Readings check -->
+      <div style="padding:10px 16px 0;">
+        <div class="alert alert--green">
+          <span class="alert__icon">✓</span>
+          <span>Opening readings recorded and verified.</span>
+        </div>
+      </div>
+
+      <!-- Offline info -->
+      <div class="section-label">Offline Support</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div class="row">
+            <span class="row__label">Network</span>
+            <span class="sync-status sync-status--online" style="font-size:11px;">● Online</span>
+          </div>
+          <div class="row">
+            <span class="row__label">Pending sync</span>
+            <span class="row__value text-green">0 items</span>
+          </div>
+          <div class="row" style="border-bottom:none;">
+            <span class="row__label">Readings saved on device</span>
+            <span class="row__value text-green">✓ Yes</span>
+          </div>
+        </div>
+        <div class="alert alert--blue" style="margin-top:8px;">
+          <span class="alert__icon">ℹ</span>
+          <span style="font-size:12px;">You can enter closing readings while offline. Data will sync when connection returns.</span>
+        </div>
+      </div>
+
+      <!-- Primary CTA -->
+      <div style="padding:16px;">
+        <a href="closing-readings.html" class="btn btn--primary">Enter Closing Readings</a>
+        <a href="start-shift.html" class="btn btn--ghost" style="margin-top:8px;">View Opening Setup</a>
+      </div>
+    </div>
+
+
+    <!-- Bottom Nav — DSM -->
+    <nav class="bottom-nav">
+      <a href="home.html" class="nav-item" id="nav-home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+      <a href="active-shift.html" class="nav-item nav-item--active" id="nav-shift">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Shift
+      </a>
+      <a href="payments.html" class="nav-item" id="nav-pay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Payments
+      </a>
+      <a href="../login.html" class="nav-item" id="nav-profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Profile
+      </a>
+    </nav>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    (function() {
+      const state = APP.getState();
+      const readings = APP.getReadings();
+
+      // Render shift info
+      if (state.started) {
+        document.getElementById('shift-sub-title').innerHTML =
+          `${state.shiftLabel} · ${state.shiftStart} – ${state.shiftEnd} &nbsp;·&nbsp; ${state.mpdLabel}`;
+        document.getElementById('val-intime').textContent = state.inTime;
+        document.getElementById('val-dsm-name').textContent = state.dsmName || 'Amit Kumar';
+        document.getElementById('val-mpd-bays').textContent = `${state.mpdLabel} · Bays ${state.bays.sort().join(' & ')}`;
+      }
+
+      // Render nozzles
+      const nozzleIds = state.nozzleIds || ['N01', 'N02'];
+      const allNozzles = MOCK.mpds.flatMap(m => m.nozzles);
+      const container = document.getElementById('nozzles-active-container');
+
+      container.innerHTML = nozzleIds.map((id, idx) => {
+        const n = allNozzles.find(x => x.id === id);
+        if (!n) return '';
+        const openVal = readings[id] !== undefined ? readings[id] : n.opening;
+        const isLast = idx === nozzleIds.length - 1;
+        return `
+          <div class="row" ${isLast ? 'style="border-bottom:none;"' : ''}>
+            <div>
+              <span style="font-weight:700;">${n.label}</span>
+              <span class="badge ${APP.getGradeBadgeClass(n.grade)}" style="margin-left:6px;">${n.grade}</span>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:13px;font-weight:600;">Opening: ${openVal.toLocaleString('en-IN', {minimumFractionDigits:2})}</div>
+              <div style="font-size:11px;color:var(--text-muted);">Tank: ${n.tank}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Adjustments — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__title">Adjustments</div>
+      <div class="top-bar__subtitle">Expenses · Shortages · Incentives</div>
+    </header>
+
+    <div class="tab-bar" id="adj-tabs">
+      <div class="tab-item tab-item--active" data-target="expense">Expense</div>
+      <div class="tab-item" data-target="short">Staff Short</div>
+      <div class="tab-item" data-target="promo">Sales Promo</div>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- EXPENSE -->
+      <div data-tab-panel="expense">
+        <div style="padding:12px 16px 0;">
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select">
+                <option>Tea</option>
+                <option>Loading Allowance</option>
+                <option>Refund</option>
+                <option>Maintenance</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <input type="text" class="form-input" placeholder="Brief description…" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Amount (₹)</label>
+              <input type="number" class="form-input" placeholder="0.00" step="0.01" />
+            </div>
+          </div>
+          <button class="btn btn--primary" style="margin-top:12px;" onclick="addEntry('expense')">+ Add Expense</button>
+        </div>
+      </div>
+
+      <!-- STAFF SHORT -->
+      <div data-tab-panel="short" class="hidden">
+        <div style="padding:12px 16px 0;">
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">DSM</label>
+              <select class="form-select">
+                <option>Omkar Shinde</option>
+                <option>Amit Kumar</option>
+                <option>Sachin Patil</option>
+                <option>Priya Nair</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Short Amount (₹)</label>
+              <input type="number" class="form-input" placeholder="0.00" step="0.01" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Reason</label>
+              <input type="text" class="form-input" placeholder="Cash shortage explanation…" />
+            </div>
+          </div>
+          <button class="btn btn--danger" style="margin-top:12px;" onclick="addEntry('short')">+ Record Shortage</button>
+        </div>
+      </div>
+
+      <!-- PROMO -->
+      <div data-tab-panel="promo" class="hidden">
+        <div style="padding:12px 16px 0;">
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">DSM</label>
+              <select class="form-select">
+                <option>Sachin Patil</option>
+                <option>Amit Kumar</option>
+                <option>Omkar Shinde</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Incentive Amount (₹)</label>
+              <input type="number" class="form-input" placeholder="0.00" step="0.01" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Reason</label>
+              <input type="text" class="form-input" placeholder="e.g. Premium fuel incentive…" />
+            </div>
+          </div>
+          <button class="btn btn--success" style="margin-top:12px;" onclick="addEntry('promo')">+ Add Incentive</button>
+        </div>
+      </div>
+
+      <!-- Today's Adjustments (shared) -->
+      <div class="section-label">Today's Adjustments</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact" id="today-list">
+          <div class="row">
+            <div>
+              <span style="font-size:13px;font-weight:700;">Omkar Short</span>
+              <span class="badge badge--red" style="margin-left:6px;">SHORT</span>
+            </div>
+            <span class="row__value text-red">−₹250</span>
+          </div>
+          <div class="row">
+            <div>
+              <span style="font-size:13px;font-weight:700;">Sachin Promo</span>
+              <span class="badge badge--green" style="margin-left:6px;">PROMO</span>
+            </div>
+            <span class="row__value text-green">+₹100</span>
+          </div>
+          <div class="row">
+            <div>
+              <span style="font-size:13px;font-weight:700;">Tea</span>
+              <span class="badge badge--slate" style="margin-left:6px;">EXPENSE</span>
+            </div>
+            <span class="row__value text-red">−₹120</span>
+          </div>
+          <div class="row" style="border-bottom:none;">
+            <div>
+              <span style="font-size:13px;font-weight:700;">Loading Allowance</span>
+              <span class="badge badge--slate" style="margin-left:6px;">EXPENSE</span>
+            </div>
+            <span class="row__value text-red">−₹200</span>
+          </div>
+        </div>
+
+        <!-- Net Adjustment Total (AUTO) -->
+        <div class="card card--compact" style="background:var(--surface-2);margin-top:8px;">
+          <div class="row" style="border-bottom:none;">
+            <span class="row__label fw-700">Net Adjustments</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="row__value fw-700 text-red">−₹470</span>
+              <span class="field-badge field-badge--auto">AUTO</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert--blue" style="margin-top:8px;">
+          <span class="alert__icon">ℹ</span>
+          <span style="font-size:12px;">These values are automatically included in shift settlement and DSM payroll.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.initTabs('#adj-tabs');
+    function addEntry(type) {
+      APP.showToast('Adjustment recorded', 'success');
+    }
+  </script>
+</body>
+</html>

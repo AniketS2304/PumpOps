@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Integrations — PumpOps Owner</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="dashboard.html" class="top-bar__back">← Dashboard</a>
+      <div class="top-bar__title">Integrations</div>
+      <div class="top-bar__subtitle">ERP, Banking, &amp; Terminal Connections</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+      <!-- ERP Sync Status -->
+      <div class="section-label">ERP Integrations</div>
+      <div style="padding:0 16px; display:flex; flex-direction:column; gap:8px;">
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="font-weight:800; font-size:15px;">Tally Prime</div>
+            <span class="badge badge--green">CONNECTED</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Syncs DSR reports, credit ledgers, and cash deposits daily at 23:59.</div>
+          <div style="border-top:1px solid var(--border); margin-top:10px; padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+            <span class="text-muted">Last sync: Today 00:05</span>
+            <button class="btn btn--sm btn--ghost btn--inline" onclick="syncNow('Tally')">Sync Now</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="font-weight:800; font-size:15px;">SAP Business One</div>
+            <span class="badge badge--slate">NOT CONFIGURED</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Used for enterprise fuel dealership networks.</div>
+          <div style="margin-top:10px;">
+            <button class="btn btn--sm btn--secondary btn--inline" onclick="configure('SAP')">Configure Connection</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bank API Connections -->
+      <div class="section-label">Payment &amp; Banking APIs</div>
+      <div style="padding:0 16px; display:flex; flex-direction:column; gap:8px;">
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="font-weight:800; font-size:15px;">Pine Labs Terminal API</div>
+            <span class="badge badge--green">ACTIVE</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Auto-reconciles card swipes and Pinelab UPI terminal settlements.</div>
+          <div style="border-top:1px solid var(--border); margin-top:10px; padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+            <span class="text-muted">Real-time event stream active</span>
+            <span class="sync-status sync-status--online" style="font-size:10px;">● Online</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="font-weight:800; font-size:15px;">ICICI Bank Corp API</div>
+            <span class="badge badge--green">ACTIVE</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted);">Pulls settled credits to match T+1 digital settlements.</div>
+          <div style="border-top:1px solid var(--border); margin-top:10px; padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+            <span class="text-muted">Last pull: Today 06:10 AM</span>
+            <button class="btn btn--sm btn--ghost btn--inline" onclick="syncNow('ICICI Bank')">Pull Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    function syncNow(system) {
+      APP.showToast('Syncing with ' + system + '…', 'info');
+      setTimeout(() => APP.showToast(system + ' sync completed successfully', 'success'), 1500);
+    }
+    function configure(system) {
+      APP.showToast('Configuring ' + system + ' connection…', 'info');
+    }
+  </script>
+</body>
+</html>

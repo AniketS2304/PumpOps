@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Staff Payroll — PumpOps Owner</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="dashboard.html" class="top-bar__back">← Dashboard</a>
+      <div class="top-bar__title">Staff Payroll</div>
+      <div class="top-bar__subtitle">July 2026</div>
+    </header>
+
+    <div class="tab-bar" id="payroll-tabs">
+      <div class="tab-item tab-item--active" data-target="summary">Summary</div>
+      <div class="tab-item" data-target="attendance">Attendance</div>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- SUMMARY TAB -->
+      <div data-tab-panel="summary">
+        <div style="padding:12px 16px 0;">
+          <div class="card card--compact" style="background:var(--surface-2);">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center;">
+              <div>
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Total Payroll</div>
+                <div style="font-size:20px;font-weight:800;margin-top:2px;" id="payroll-total">—</div>
+                <span class="field-badge field-badge--auto">AUTO</span>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Staff Count</div>
+                <div style="font-size:20px;font-weight:800;margin-top:2px;" id="staff-count">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:8px 16px;display:flex;flex-direction:column;gap:8px;margin-top:8px;" id="staff-list"></div>
+      </div>
+
+      <!-- ATTENDANCE TAB -->
+      <div data-tab-panel="attendance" class="hidden">
+        <div class="section-label">Attendance — Jul 2026</div>
+        <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px;" id="attendance-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.initTabs('#payroll-tabs');
+    const dsms = MOCK.dsms;
+
+    // Build payroll
+    const payrollData = dsms.map(d => {
+      const totalShifts = 27; // mock — July 1..27
+      const presentShifts = d.presentShifts || Math.floor(Math.random()*3 + 24);
+      const advances = d.advances || 0;
+      const shorts = d.shortages || 0;
+      const earned = PO.calculateDSMPayroll({ baseSalary: d.baseSalary, presentDays: presentShifts, totalDays: totalShifts, advances, shortages: shorts });
+      return { ...d, presentShifts, totalShifts, advances, shorts, earned };
+    });
+
+    const totalPayroll = payrollData.reduce((s, d) => s + d.earned, 0);
+    document.getElementById('payroll-total').textContent = PO.formatINR(totalPayroll);
+    document.getElementById('staff-count').textContent = payrollData.length;
+
+    document.getElementById('staff-list').innerHTML = payrollData.map(d => `
+      <div class="card card--compact">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;">${d.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);">DSM · Base ₹${d.baseSalary.toLocaleString('en-IN')}/mo</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:18px;font-weight:800;color:var(--brand);">${PO.formatINR(d.earned)}</div>
+            <span class="field-badge field-badge--auto">AUTO</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:12px;color:var(--text-muted);">
+          <span>Shifts: <strong style="color:var(--text-primary);">${d.presentShifts}/${d.totalShifts}</strong></span>
+          <span>Adv: <strong style="color:${d.advances>0?'var(--amber)':'var(--text-primary)'};">−${PO.formatINR(d.advances)}</strong></span>
+          <span>Short: <strong style="color:${d.shorts<0?'var(--red)':'var(--text-primary)'};">${d.shorts}</strong></span>
+        </div>
+        <button class="btn btn--ghost btn--sm" style="margin-top:8px;font-size:11px;" onclick="showPayrollDrill('${d.name}', ${d.baseSalary}, ${d.presentShifts}, ${d.totalShifts}, ${d.advances}, ${d.shorts}, ${d.earned})">View breakdown →</button>
+      </div>
+    `).join('');
+
+    document.getElementById('attendance-list').innerHTML = payrollData.map(d => `
+      <div class="card card--compact">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:700;">${d.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);">DSM</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px;font-weight:700;">${d.presentShifts}/${d.totalShifts} shifts</div>
+            <div style="font-size:11px;color:var(--text-muted);">${d.totalShifts - d.presentShifts} absent</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <div class="progress-bar">
+            <div class="progress-bar__fill" style="width:${Math.round(d.presentShifts/d.totalShifts*100)}%"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${Math.round(d.presentShifts/d.totalShifts*100)}% attendance</div>
+        </div>
+      </div>
+    `).join('');
+
+    function showPayrollDrill(name, base, present, total, adv, short, earned) {
+      const perShift = base / total;
+      const grossEarned = perShift * present;
+      APP.showCalcModal('Payroll — ' + name, [
+        { label: 'Base Salary',       value: PO.formatINR(base) + ' / mo' },
+        { label: 'Total Shifts',      value: total },
+        { label: 'Present Shifts',    value: present },
+        { label: 'Rate per Shift',    value: PO.formatINR(perShift) },
+        { label: 'Gross Earned',      value: PO.formatINR(grossEarned) },
+        { label: '− Advance',         value: PO.formatINR(adv) },
+        { label: '− Shortages',       value: PO.formatINR(Math.abs(short < 0 ? short : 0)) },
+        { label: '= Net Payable',     value: PO.formatINR(earned) },
+      ]);
+    }
+  </script>
+</body>
+</html>

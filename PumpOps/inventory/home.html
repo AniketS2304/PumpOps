@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Inventory — PumpOps</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar">
+      <div class="top-bar__meta">
+        <div>
+          <div class="top-bar__station">SPS Bharat Petroleum · Pune</div>
+          <div class="top-bar__title">Inventory</div>
+          <div class="top-bar__subtitle">Oil · Lubricants · Accessories</div>
+        </div>
+        <span class="top-bar__role">Supervisor</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:8px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;">₹18,420</div>
+          <div style="font-size:9px;opacity:.75;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Stock Value</div>
+        </div>
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:8px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;color:#fbbf24;">2</div>
+          <div style="font-size:9px;opacity:.75;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Low Stock</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- Alerts -->
+      <div style="padding:10px 16px 0;display:flex;flex-direction:column;gap:6px;">
+        <div class="card--alert-amber card card--compact">
+          <div style="font-size:13px;font-weight:700;">Engine Oil 1L — 57 bottles</div>
+          <div style="font-size:12px;color:var(--text-secondary);">Reorder level: 60 — consider ordering</div>
+        </div>
+        <div class="card--alert-red card card--compact">
+          <div style="font-size:13px;font-weight:700;">Gear Oil 1L — 9 bottles</div>
+          <div style="font-size:12px;color:var(--text-secondary);">Reorder level: 5 — nearly depleted</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-label">Quick Actions</div>
+      <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <a href="stock-count.html" class="card card--compact" style="text-align:center;padding:14px 8px;">
+          <div style="font-size:20px;margin-bottom:4px;">📦</div>
+          <div style="font-size:12px;font-weight:700;">Stock Count</div>
+        </a>
+        <a href="delivery.html" class="card card--compact" style="text-align:center;padding:14px 8px;">
+          <div style="font-size:20px;margin-bottom:4px;">🚚</div>
+          <div style="font-size:12px;font-weight:700;">Record Delivery</div>
+        </a>
+        <a href="stock.html" class="card card--compact" style="text-align:center;padding:14px 8px;">
+          <div style="font-size:20px;margin-bottom:4px;">📋</div>
+          <div style="font-size:12px;font-weight:700;">View Stock</div>
+        </a>
+        <a href="variance.html" class="card card--compact" style="text-align:center;padding:14px 8px;">
+          <div style="font-size:20px;margin-bottom:4px;">⚖</div>
+          <div style="font-size:12px;font-weight:700;">Variance Report</div>
+        </a>
+      </div>
+
+      <!-- Today's Receipts -->
+      <div class="section-label">Today's Receipts</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div class="row"><span class="row__label">Engine Oil 1L</span><span class="row__value text-green">+20 bottles</span></div>
+          <div class="row" style="border-bottom:none;"><span class="row__label">Air Freshener</span><span class="row__value text-green">+12 pcs</span></div>
+        </div>
+      </div>
+
+      <!-- Stock Summary -->
+      <div class="section-label">Product Stock Overview</div>
+      <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:6px;" id="stock-summary"></div>
+    </div>
+
+    <!-- Bottom Nav — Inventory -->
+    <nav class="bottom-nav">
+      <a href="home.html" class="nav-item nav-item--active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+      <a href="stock.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Stock
+      </a>
+      <a href="delivery.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Deliveries
+      </a>
+      <a href="variance.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Reports
+      </a>
+    </nav>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const products = MOCK.products;
+    const summary = document.getElementById('stock-summary');
+    summary.innerHTML = products.map(p => {
+      const exp = p.opening + p.received - p.sold;
+      const variance = p.physical - exp;
+      const low = p.physical <= p.reorderLevel;
+      return `
+        <div class="card card--compact ${low ? 'card--alert-amber' : ''}">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:13px;font-weight:700;">${p.name} ${low?'<span class="badge badge--amber" style="margin-left:4px;font-size:8px;">LOW</span>':''}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${p.category}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:16px;font-weight:800;">${p.physical} <span style="font-size:11px;font-weight:400;">${p.unit}</span></div>
+              <div style="font-size:11px;color:${variance===0?'var(--green)':variance<0?'var(--amber)':'var(--blue)'};">Var: ${variance>=0?'+':''}${variance}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  </script>
+</body>
+</html>

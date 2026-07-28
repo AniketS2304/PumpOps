@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Cash Count — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .denom-input {
+      width: 80px;
+      border: 1.5px solid var(--border-mid);
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--text-primary);
+      background: var(--surface);
+      font-family: var(--font);
+    }
+    .denom-input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(15,76,129,.12); }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__title">Cash Count</div>
+      <div class="top-bar__subtitle">Count physical cash · Morning Shift</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- Summary -->
+      <div style="padding:12px 16px 0;">
+        <div class="card" style="background:var(--surface-2);">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Counted Cash</div>
+              <div style="font-size:24px;font-weight:800;margin-top:2px;" id="counted-display">₹1,81,000</div>
+              <span class="field-badge field-badge--auto" style="margin-top:4px;">AUTO</span>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Expected Cash</div>
+              <div style="font-size:24px;font-weight:800;margin-top:2px;">₹1,81,050</div>
+              <span class="field-badge field-badge--auto" style="margin-top:4px;">AUTO</span>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:10px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:14px;font-weight:700;">Cash Variance</span>
+            <div style="text-align:right;">
+              <span style="font-size:20px;font-weight:800;" id="variance-display" class="text-amber">−₹50</span>
+              <span class="field-badge field-badge--auto" style="margin-left:6px;">AUTO</span>
+            </div>
+          </div>
+          <div style="margin-top:6px;cursor:pointer;" onclick="showExpectedDrill()">
+            <span style="font-size:11px;color:var(--brand);font-weight:600;text-decoration:underline;">How is Expected Cash calculated? →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status indicator -->
+      <div style="padding:8px 16px 0;" id="variance-alert">
+        <div class="alert alert--amber">
+          <span class="alert__icon">⚠</span>
+          <span style="font-size:13px;">Cash short by <strong>₹50</strong>. Variance remark is required.</span>
+        </div>
+      </div>
+
+      <!-- Denomination Counter -->
+      <div class="section-label">Denomination Count</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Note</span>
+            <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Count</span>
+            <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;text-align:right;">Subtotal</span>
+          </div>
+          <div id="denom-rows"></div>
+        </div>
+      </div>
+
+      <!-- Variance Remark (shown when variance exists) -->
+      <div id="remark-section" style="padding:8px 16px 0;">
+        <div class="form-group">
+          <label class="form-label">Variance Remark <span style="color:var(--red);">*</span></label>
+          <textarea class="form-input" id="variance-remark" placeholder="Explain the cash difference…" style="min-height:72px;resize:none;"></textarea>
+          <div class="form-hint">Required when variance exceeds ₹0</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <a href="home.html" class="btn btn--ghost">Back</a>
+        <button class="btn btn--primary" onclick="saveCashCount()">Save Cash Count</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const EXPECTED = 181050;
+    const denominations = [
+      { d: 500, count: 240 },
+      { d: 200, count: 100 },
+      { d: 100, count: 300 },
+      { d:  50, count:  60 },
+      { d:  20, count:  40 },
+      { d:  10, count:  30 },
+    ];
+
+    function renderRows() {
+      const container = document.getElementById('denom-rows');
+      container.innerHTML = denominations.map((row, i) => `
+        <div style="display:grid;grid-template-columns:60px 1fr 1fr;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:15px;font-weight:700;color:var(--brand);">₹${row.d}</span>
+          <input class="denom-input" type="number" min="0" value="${row.count}" id="d-${i}"
+                 oninput="updateDenom(${i})" />
+          <span style="font-size:14px;font-weight:700;text-align:right;color:var(--text-secondary);" id="sub-${i}">
+            ${PO.formatINR(PO.calculateDenominationSubtotal(row.d, row.count))}
+          </span>
+        </div>
+      `).join('') + `<div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:8px;padding:8px 0;border-top:2px solid var(--border);margin-top:4px;">
+        <span></span>
+        <span style="font-size:12px;font-weight:700;color:var(--text-muted);">TOTAL</span>
+        <span style="font-size:16px;font-weight:800;text-align:right;" id="denom-total">${PO.formatINR(PO.calculateCountedCash(denominations.map(r=>({denomination:r.d,count:r.count}))))}</span>
+      </div>`;
+    }
+
+    function updateDenom(i) {
+      const count = parseInt(document.getElementById('d-' + i).value) || 0;
+      denominations[i].count = count;
+      document.getElementById('sub-' + i).textContent = PO.formatINR(PO.calculateDenominationSubtotal(denominations[i].d, count));
+      recalcTotal();
+    }
+
+    function recalcTotal() {
+      const items = denominations.map(r => ({ denomination: r.d, count: r.count }));
+      const counted = PO.calculateCountedCash(items);
+      const variance = PO.calculateCashVariance(counted, EXPECTED);
+      document.getElementById('counted-display').textContent = PO.formatINR(counted);
+      document.getElementById('variance-display').textContent = (variance >= 0 ? '+' : '−') + PO.formatINR(Math.abs(variance));
+      document.getElementById('variance-display').className = variance === 0 ? 'text-green' : variance > 0 ? 'text-blue' : 'text-amber';
+      document.getElementById('denom-total').textContent = PO.formatINR(counted);
+      const alert = document.getElementById('variance-alert').querySelector('.alert');
+      const remark = document.getElementById('remark-section');
+      if (Math.abs(variance) < 0.01) {
+        alert.className = 'alert alert--green';
+        alert.innerHTML = '<span class="alert__icon">✓</span><span style="font-size:13px;font-weight:700;">Cash balanced — no variance.</span>';
+        remark.style.display = 'none';
+      } else {
+        alert.className = 'alert alert--amber';
+        alert.innerHTML = `<span class="alert__icon">⚠</span><span style="font-size:13px;">Cash ${variance < 0 ? 'short' : 'surplus'} by <strong>${PO.formatINR(Math.abs(variance))}</strong>. Remark required.</span>`;
+        remark.style.display = '';
+      }
+    }
+
+    function showExpectedDrill() {
+      APP.showCalcModal('Expected Cash Calculation', [
+        { label: 'Total Fuel Sales', value: '₹4,18,650.00' },
+        { label: '− UPI Collections', value: '₹1,21,500.00' },
+        { label: '− Card Collections', value: '₹68,200.00' },
+        { label: '− Credit Sales', value: '₹38,650.00' },
+        { label: '− Loyalty', value: '₹8,300.00' },
+        { label: '− Petty Expenses', value: '₹950.00' },
+        { label: '= Expected Cash', value: '₹1,81,050.00' },
+      ]);
+    }
+
+    function saveCashCount() {
+      const items = denominations.map(r => ({ denomination: r.d, count: r.count }));
+      const counted = PO.calculateCountedCash(items);
+      const variance = PO.calculateCashVariance(counted, EXPECTED);
+      if (Math.abs(variance) >= 1) {
+        const remark = document.getElementById('variance-remark').value.trim();
+        if (!remark) { APP.showToast('Variance remark required', 'error'); return; }
+      }
+      APP.showToast('Cash count saved', 'success');
+      setTimeout(() => window.location.href = 'home.html', 1000);
+    }
+
+    renderRows();
+    recalcTotal();
+  </script>
+</body>
+</html>

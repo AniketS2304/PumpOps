@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Daily Sales Report — PumpOps</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .dsr-section { padding: 0 16px; margin-bottom: 0; }
+    .dsr-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .dsr-number--brand { color: var(--brand); }
+    .dsr-number--green { color: var(--green); }
+    .dsr-number--red { color: var(--red); }
+    .dsr-number--amber { color: var(--amber); }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="dashboard.html" class="top-bar__back">← Dashboard</a>
+      <div class="top-bar__title">Daily Sales Report</div>
+      <div class="top-bar__subtitle" id="dsr-date">27 Jul 2026, Monday</div>
+    </header>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar" id="dsr-tabs">
+      <div class="tab-item tab-item--active" data-target="summary">Summary</div>
+      <div class="tab-item" data-target="fuel">Fuel</div>
+      <div class="tab-item" data-target="payments">Payments</div>
+      <div class="tab-item" data-target="adjustments">Adj.</div>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- SUMMARY TAB -->
+      <div data-tab-panel="summary">
+        <!-- Hero Total -->
+        <div style="padding:16px 16px 8px;background:var(--surface-2);border-bottom:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Total Sales</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <div class="dsr-number dsr-number--brand" id="total-sales">—</div>
+            <span class="field-badge field-badge--auto">AUTO</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="total-litres-disp">—</div>
+        </div>
+
+        <!-- By Grade -->
+        <div class="section-label">By Grade</div>
+        <div class="dsr-section">
+          <div class="card card--compact" id="grade-rows"></div>
+        </div>
+
+        <!-- Collections -->
+        <div class="section-label">Collections</div>
+        <div class="dsr-section">
+          <div class="card card--compact" id="collection-rows"></div>
+        </div>
+
+        <!-- Reconciliation -->
+        <div class="section-label">Reconciliation</div>
+        <div class="dsr-section">
+          <div class="card card--compact" id="recon-rows"></div>
+        </div>
+
+        <!-- Adjustments -->
+        <div class="section-label">Adjustments</div>
+        <div class="dsr-section">
+          <div class="card card--compact" id="adj-rows"></div>
+        </div>
+
+        <!-- DSR Status -->
+        <div class="section-label">DSR Status</div>
+        <div class="dsr-section" style="padding-bottom:16px;">
+          <div class="card card--compact">
+            <div class="row">
+              <span class="row__label">All shifts closed</span>
+              <span class="checklist-item__status text-green">✓</span>
+            </div>
+            <div class="row">
+              <span class="row__label">Cash variance noted</span>
+              <span class="checklist-item__status text-amber">−₹420</span>
+            </div>
+            <div class="row">
+              <span class="row__label">Tank variance noted</span>
+              <span class="checklist-item__status text-amber">−18 L</span>
+            </div>
+            <div class="row" style="border-bottom:none;">
+              <span class="row__label">Status</span>
+              <span class="badge badge--green">DSR READY</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUEL TAB -->
+      <div data-tab-panel="fuel" class="hidden">
+        <div class="section-label">Fuel Sales — All Grades</div>
+        <div style="padding:0 16px;">
+          <div class="card card--compact" id="fuel-detail"></div>
+        </div>
+
+        <div class="section-label">Tank Stock</div>
+        <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px;" id="tank-rows"></div>
+      </div>
+
+      <!-- PAYMENTS TAB -->
+      <div data-tab-panel="payments" class="hidden">
+        <div class="section-label">Payment Breakdown</div>
+        <div style="padding:0 16px;">
+          <div class="card card--compact" id="payment-rows"></div>
+        </div>
+
+        <div class="section-label">Digital Settlement</div>
+        <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px;" id="settlement-rows"></div>
+      </div>
+
+      <!-- ADJUSTMENTS TAB -->
+      <div data-tab-panel="adjustments" class="hidden">
+        <div class="section-label">All Adjustments</div>
+        <div style="padding:0 16px;">
+          <div class="card card--compact" id="all-adj-rows"></div>
+        </div>
+
+        <div class="section-label">DSM Performance</div>
+        <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px;" id="dsm-rows"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.initTabs('#dsr-tabs');
+
+    // ─── Mock DSR data ───────────────────────────────────────────
+    const grades = [
+      { name: 'MS',    rate: 104.72, litres: 3146, testing: 12 },
+      { name: 'HSD',   rate:  92.40, litres: 3356, testing: 18 },
+      { name: 'Speed', rate: 113.50, litres:  340, testing:  4 },
+    ];
+
+    const payments = [
+      { mode: 'Cash',   amount: 321200 },
+      { mode: 'UPI',    amount: 284500 },
+      { mode: 'Card',   amount: 142200 },
+      { mode: 'Credit', amount: 115000 },
+      { mode: 'Loyalty',amount: 8300   },
+    ];
+
+    const adjustments = [
+      { label: 'Credit Sales',      amount: 115000, type: 'credit' },
+      { label: 'Expenses (total)',   amount: -1680,  type: 'expense' },
+      { label: 'DSM Shortage',       amount: -650,   type: 'short' },
+      { label: 'Sales Promo',        amount: 220,    type: 'promo' },
+    ];
+
+    const dsmPerformance = MOCK.dsms.map((d, i) => ({
+      name: d.name,
+      litres: [359, 620, 340, 420, 580, 480][i] || 320,
+      short: [0, 0, -250, 0, 0, -400][i],
+    }));
+
+    // ─── Build DSR using calculation engine ──────────────────────
+    const dsr = PO.buildDSR({ grades, payments, adjustments, dsmPerformance });
+
+    // ─── Render Summary ──────────────────────────────────────────
+    document.getElementById('total-sales').textContent = PO.formatINR(dsr.totalSaleAmount);
+    document.getElementById('total-litres-disp').textContent = PO.formatLitres(dsr.totalLitres) + ' total dispensed';
+
+    // Grade rows
+    document.getElementById('grade-rows').innerHTML = dsr.gradeBreakdown.map(g => `
+      <div class="row">
+        <div><span class="badge badge--${g.name==='MS'?'green':g.name==='HSD'?'blue':'amber'}" style="margin-right:6px;">${g.name}</span>${g.name==='MS'?'Petrol':g.name==='HSD'?'Diesel':'Speed'}</div>
+        <div style="text-align:right;">
+          <div class="fw-700">${PO.formatINR(g.saleAmount)}</div>
+          <div class="text-xs text-muted">${PO.formatLitres(g.netSale)} net</div>
+        </div>
+      </div>
+    `).join('') + `<div class="row" style="border-bottom:none;border-top:2px solid var(--border);margin-top:4px;padding-top:8px;">
+      <span class="fw-700">Total</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="dsr-number dsr-number--brand" style="font-size:18px;">${PO.formatINR(dsr.totalSaleAmount)}</span>
+        <span class="field-badge field-badge--auto">AUTO</span>
+      </div>
+    </div>`;
+
+    // Collection rows
+    document.getElementById('collection-rows').innerHTML = dsr.paymentBreakdown.map(p => `
+      <div class="row"><span class="row__label">${p.mode}</span><span class="row__value">${PO.formatINR(p.amount)}</span></div>
+    `).join('') + `<div class="row" style="border-top:2px solid var(--border);border-bottom:none;margin-top:4px;padding-top:8px;">
+      <span class="fw-700">Total Collections</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="row__value fw-700 text-green" style="font-size:16px;">${PO.formatINR(dsr.totalCollections)}</span>
+        <span class="field-badge field-badge--auto">AUTO</span>
+      </div>
+    </div>`;
+
+    // Recon rows
+    document.getElementById('recon-rows').innerHTML = `
+      <div class="row">
+        <span class="row__label">Expected Collections</span>
+        <div style="display:flex;align-items:center;gap:6px;"><span class="row__value">${PO.formatINR(dsr.totalSaleAmount)}</span><span class="field-badge field-badge--auto">AUTO</span></div>
+      </div>
+      <div class="row">
+        <span class="row__label">Actual Collections</span>
+        <div style="display:flex;align-items:center;gap:6px;"><span class="row__value">${PO.formatINR(dsr.totalCollections)}</span><span class="field-badge field-badge--auto">AUTO</span></div>
+      </div>
+      <div class="row" style="border-bottom:none;">
+        <span class="row__label fw-700">Difference</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="row__value fw-700" style="color:${dsr.collectionDiff===0?'var(--green)':'var(--amber)'};">${PO.formatINR(dsr.collectionDiff)}</span>
+          <span class="field-badge field-badge--auto">AUTO</span>
+        </div>
+      </div>
+    `;
+
+    // Adj rows
+    document.getElementById('adj-rows').innerHTML = dsr.adjustmentBreakdown.map(a => `
+      <div class="row"><span class="row__label">${a.label}</span><span class="row__value" style="color:${a.amount<0?'var(--red)':'var(--green)'};">${a.amount>0?'+':''}${PO.formatINR(a.amount)}</span></div>
+    `).join('') + `<div class="row" style="border-top:2px solid var(--border);border-bottom:none;margin-top:4px;padding-top:8px;">
+      <span class="fw-700">Net Adjustments</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="row__value fw-700" style="color:${dsr.totalAdjustments<0?'var(--red)':'var(--green)'};">${dsr.totalAdjustments>=0?'+':''}${PO.formatINR(dsr.totalAdjustments)}</span>
+        <span class="field-badge field-badge--auto">AUTO</span>
+      </div>
+    </div>`;
+
+    // ─── FUEL TAB ─────────────────────────────────────────────────
+    document.getElementById('fuel-detail').innerHTML = dsr.gradeBreakdown.map(g => `
+      <div class="row">
+        <div><span class="badge badge--${g.name==='MS'?'green':g.name==='HSD'?'blue':'amber'}" style="margin-right:6px;">${g.name}</span></div>
+        <div style="text-align:right;">
+          <div class="fw-700">${PO.formatLitres(g.netSale)} net</div>
+          <div class="text-xs text-muted">Gross: ${PO.formatLitres(g.grossSale)} · Testing: ${PO.formatLitres(g.testing)}</div>
+          <div class="text-xs text-muted">${PO.formatINR(g.saleAmount)} @ ₹${g.rate}/L</div>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('tank-rows').innerHTML = [
+      { label:'MS T-1', closing:13300, capacity:20000 },
+      { label:'MS T-2', closing:7102,  capacity:15000 },
+      { label:'HSD T-3',closing:14623, capacity:25000 },
+      { label:'Speed T-4',closing:4880,capacity:8000  },
+    ].map(t => `
+      <div class="card card--compact">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:13px;font-weight:700;">${t.label}</span>
+          <span style="font-size:15px;font-weight:800;">${t.closing.toLocaleString('en-IN')} L</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-bar__fill ${t.closing/t.capacity<0.2?'progress-bar__fill--red':t.closing/t.capacity<0.4?'progress-bar__fill--amber':''}" style="width:${Math.round(t.closing/t.capacity*100)}%"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${Math.round(t.closing/t.capacity*100)}% of ${(t.capacity/1000).toFixed(0)}k L capacity</div>
+      </div>
+    `).join('');
+
+    // ─── PAYMENTS TAB ─────────────────────────────────────────────
+    document.getElementById('payment-rows').innerHTML = dsr.paymentBreakdown.map(p => `
+      <div class="row"><span class="row__label">${p.mode}</span><span class="row__value">${PO.formatINR(p.amount)}</span></div>
+    `).join('');
+
+    document.getElementById('settlement-rows').innerHTML = MOCK.gateways.map(gw => {
+      const diff = PO.calculateSettlementDifference(gw.gatewayAmt, gw.bankSettled);
+      return `
+        <div class="card card--compact" style="border-left:3px solid ${diff===0?'var(--green)':'var(--amber)'};">
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:700;">${gw.name}</span>
+            <span style="font-size:13px;font-weight:700;color:${diff===0?'var(--green)':'var(--amber)'};">${diff===0?'✓ Balanced':PO.formatINR(diff)+' diff'}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">System: ${PO.formatINR(gw.systemAmt)} · Settled: ${PO.formatINR(gw.bankSettled)}</div>
+        </div>
+      `;
+    }).join('');
+
+    // ─── ADJUSTMENTS TAB ─────────────────────────────────────────
+    document.getElementById('all-adj-rows').innerHTML = dsr.adjustmentBreakdown.map(a => `
+      <div class="row"><span class="row__label">${a.label}</span><span class="row__value" style="color:${a.amount<0?'var(--red)':'var(--green)'};">${a.amount>=0?'+':''}${PO.formatINR(a.amount)}</span></div>
+    `).join('') + `<div class="row" style="border-top:2px solid var(--border);border-bottom:none;"><span class="fw-700">Net Adjustments</span><span class="row__value fw-700">${PO.formatINR(dsr.totalAdjustments)}</span></div>`;
+
+    document.getElementById('dsm-rows').innerHTML = dsr.dsmPerformance.map(d => `
+      <div class="card card--compact ${d.shortage<0?'card--alert-amber':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:700;">${d.name}</div>
+            <div style="font-size:12px;color:var(--text-muted);">${PO.formatLitres(d.litres)} sold</div>
+          </div>
+          <div style="text-align:right;">
+            ${d.shortage < 0 ? `<span class="badge badge--amber" style="font-size:10px;">SHORT ${PO.formatINR(Math.abs(d.shortage))}</span>` : `<span class="badge badge--green" style="font-size:10px;">OK</span>`}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  </script>
+</body>
+</html>

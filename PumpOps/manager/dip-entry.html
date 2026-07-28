@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>DIP Entry — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .tank-group-header {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--text-muted);
+      padding: 12px 0 4px; border-bottom: 1px solid var(--border); margin-bottom: 10px;
+    }
+    .dip-history-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+    .dip-hist-row { display:flex; justify-content:space-between; padding:3px 0; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Manager Home</a>
+      <div class="top-bar__title">Daily DIP Entry</div>
+      <div class="top-bar__subtitle">Opening stock + density per tank</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- DIP Form -->
+      <div class="section-label">New DIP Reading</div>
+      <div style="padding:0 16px;">
+        <div class="card">
+          <!-- Date -->
+          <div class="form-group">
+            <label class="form-label">Date <span style="color:var(--red);">*</span></label>
+            <input type="date" class="form-input" id="dip-date" />
+          </div>
+          <!-- Opening Stock -->
+          <div class="tank-group-header">Opening Stock (Litres)</div>
+          <div class="form-group">
+            <label class="form-label">⛽ Petrol T-1 (MS Tank 1)</label>
+            <div style="position:relative;">
+              <input type="number" class="form-input" id="dip-petrol-t1" placeholder="0" step="1" min="0" />
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-muted);">L</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">⛽ Petrol T-2 (MS Tank 2)</label>
+            <div style="position:relative;">
+              <input type="number" class="form-input" id="dip-petrol-t2" placeholder="0" step="1" min="0" />
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-muted);">L</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🔥 Speed T-4 (Premium Tank)</label>
+            <div style="position:relative;">
+              <input type="number" class="form-input" id="dip-speed-t4" placeholder="0" step="1" min="0" />
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-muted);">L</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🛢 Diesel T-3 (HSD Tank)</label>
+            <div style="position:relative;">
+              <input type="number" class="form-input" id="dip-diesel-t3" placeholder="0" step="1" min="0" />
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-muted);">L</span>
+            </div>
+          </div>
+          <!-- Density -->
+          <div class="tank-group-header">Density (kg/L)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+            <div>
+              <label class="form-label">⛽ Petrol</label>
+              <input type="number" class="form-input" id="dip-dens-petrol" placeholder="0.728" step="0.001" min="0.7" max="0.85" />
+            </div>
+            <div>
+              <label class="form-label">🔥 Speed</label>
+              <input type="number" class="form-input" id="dip-dens-speed" placeholder="0.722" step="0.001" min="0.7" max="0.85" />
+            </div>
+            <div>
+              <label class="form-label">🛢 Diesel</label>
+              <input type="number" class="form-input" id="dip-dens-diesel" placeholder="0.836" step="0.001" min="0.8" max="0.9" />
+            </div>
+          </div>
+          <!-- Notes -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Notes (optional)</label>
+            <textarea class="form-input" id="dip-notes" rows="2" placeholder="e.g. Tank T-3 approaching reorder level…" style="resize:none;font-size:13px;"></textarea>
+          </div>
+        </div>
+        <button class="btn btn--primary" style="margin-top:8px;" onclick="saveDip()">💾 Save DIP Entry</button>
+      </div>
+
+      <!-- History -->
+      <div class="section-label">DIP History</div>
+      <div style="padding:0 16px 24px;" id="dip-history"></div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    // Set today's date default
+    const today = new Date();
+    document.getElementById('dip-date').value = today.toISOString().split('T')[0];
+
+    let dipHistory = JSON.parse(localStorage.getItem('pumpops_dip') || 'null') || MOCK.dipHistory;
+
+    function saveDip() {
+      const date = document.getElementById('dip-date').value;
+      const pT1 = parseFloat(document.getElementById('dip-petrol-t1').value);
+      const pT2 = parseFloat(document.getElementById('dip-petrol-t2').value);
+      const sT4 = parseFloat(document.getElementById('dip-speed-t4').value);
+      const dT3 = parseFloat(document.getElementById('dip-diesel-t3').value);
+      if (!date) { APP.showToast('Select a date', 'error'); return; }
+      if (isNaN(pT1) || isNaN(pT2) || isNaN(sT4) || isNaN(dT3)) {
+        APP.showToast('Enter all opening stock values', 'error'); return;
+      }
+      const entry = {
+        id: 'DIP-' + Date.now(),
+        date: new Date(date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }),
+        openingStock: { petrolT1: pT1, petrolT2: pT2, speedT4: sT4, dieselT3: dT3 },
+        density: {
+          petrol: parseFloat(document.getElementById('dip-dens-petrol').value) || null,
+          speed:  parseFloat(document.getElementById('dip-dens-speed').value)  || null,
+          diesel: parseFloat(document.getElementById('dip-dens-diesel').value) || null,
+        },
+        enteredBy: 'Rajesh Joshi',
+        enteredAt: APP.now(),
+        notes: document.getElementById('dip-notes').value.trim(),
+      };
+      dipHistory.unshift(entry);
+      localStorage.setItem('pumpops_dip', JSON.stringify(dipHistory));
+      APP.showToast('DIP entry saved', 'success');
+      renderHistory();
+      // Reset
+      ['dip-petrol-t1','dip-petrol-t2','dip-speed-t4','dip-diesel-t3','dip-dens-petrol','dip-dens-speed','dip-dens-diesel','dip-notes']
+        .forEach(id => document.getElementById(id).value = '');
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('dip-history');
+      if (!dipHistory.length) {
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:16px;">No entries yet</div>';
+        return;
+      }
+      container.innerHTML = dipHistory.map(d => `
+        <div class="dip-history-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-weight:700;font-size:14px;">${d.date}</span>
+            <span style="font-size:11px;color:var(--text-muted);">By ${d.enteredBy} · ${d.enteredAt}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:8px;">
+            <div class="dip-hist-row"><span style="color:var(--text-muted);">⛽ Petrol T1</span><span style="font-weight:700;">${d.openingStock.petrolT1.toLocaleString('en-IN')} L</span></div>
+            <div class="dip-hist-row"><span style="color:var(--text-muted);">⛽ Petrol T2</span><span style="font-weight:700;">${d.openingStock.petrolT2.toLocaleString('en-IN')} L</span></div>
+            <div class="dip-hist-row"><span style="color:var(--text-muted);">🔥 Speed T4</span><span style="font-weight:700;">${d.openingStock.speedT4.toLocaleString('en-IN')} L</span></div>
+            <div class="dip-hist-row"><span style="color:var(--text-muted);">🛢 Diesel T3</span><span style="font-weight:700;">${d.openingStock.dieselT3.toLocaleString('en-IN')} L</span></div>
+          </div>
+          ${d.density && (d.density.petrol || d.density.diesel) ? `
+          <div style="border-top:1px solid var(--border);padding-top:6px;display:flex;gap:12px;flex-wrap:wrap;">
+            ${d.density.petrol ? `<span style="font-size:12px;color:var(--text-muted);">⛽ ρ ${d.density.petrol}</span>` : ''}
+            ${d.density.speed  ? `<span style="font-size:12px;color:var(--text-muted);">🔥 ρ ${d.density.speed}</span>`  : ''}
+            ${d.density.diesel ? `<span style="font-size:12px;color:var(--text-muted);">🛢 ρ ${d.density.diesel}</span>` : ''}
+          </div>` : ''}
+          ${d.notes ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${d.notes}</div>` : ''}
+        </div>`).join('');
+    }
+
+    renderHistory();
+  </script>
+</body>
+</html>

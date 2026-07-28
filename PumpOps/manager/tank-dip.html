@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Tank DIP — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__title">Tank DIP Readings</div>
+      <div class="top-bar__subtitle">Morning Shift · Closing · 27 Jul 2026</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+      <div class="alert alert--blue" style="margin:12px 16px 0;">
+        <span class="alert__icon">ℹ</span>
+        <span style="font-size:13px;">Physical DIP is entered. Expected closing is automatically calculated from Opening + Receipts − Metered Sales.</span>
+      </div>
+
+      <div style="padding:8px 16px 0; display:flex; flex-direction:column; gap:12px;" id="tank-list"></div>
+
+      <div class="btn-row" style="margin-top:4px;">
+        <a href="home.html" class="btn btn--ghost">Back</a>
+        <button class="btn btn--primary" onclick="saveDips()">Save DIP Readings</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const tanks = [
+      { id: 'T1', label: 'MS T-1',    grade: 'MS',    gradeColor:'#16a34a', openDip: 12820, receipts: 5000, sales: 4500, physical: 13300 },
+      { id: 'T2', label: 'MS T-2',    grade: 'MS',    gradeColor:'#16a34a', openDip: 10200, receipts:    0, sales: 3100, physical: 7102  },
+      { id: 'T3', label: 'HSD T-3',   grade: 'HSD',   gradeColor:'#2563eb', openDip: 18450, receipts:    0, sales: 3824, physical: 14623 },
+      { id: 'T4', label: 'Speed T-4', grade: 'Speed', gradeColor:'#d97706', openDip:  5200, receipts:    0, sales:  320, physical: 4880  },
+    ];
+
+    function renderTanks() {
+      const container = document.getElementById('tank-list');
+      container.innerHTML = tanks.map((tank, i) => {
+        const expected = PO.calculateExpectedTankClosing(tank.openDip, tank.receipts, tank.sales);
+        const variance = PO.calculateTankVariance(tank.physical, expected);
+        const varColor  = Math.abs(variance) === 0 ? 'var(--green)' : Math.abs(variance) <= 10 ? 'var(--amber)' : 'var(--red)';
+        const varIcon   = Math.abs(variance) === 0 ? '✓' : Math.abs(variance) <= 10 ? '⚠' : '⛔';
+        return `
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div>
+                <span style="font-size:16px;font-weight:800;">${tank.label}</span>
+                <span class="badge" style="margin-left:8px;background:${tank.gradeColor}20;color:${tank.gradeColor};border:1px solid ${tank.gradeColor}40;">${tank.grade}</span>
+              </div>
+            </div>
+
+            <div class="row">
+              <span class="row__label">Opening DIP</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="row__value">${tank.openDip.toLocaleString('en-IN')} L</span>
+                <span class="field-badge field-badge--prev">SHIFT OPEN</span>
+              </div>
+            </div>
+            <div class="row">
+              <span class="row__label">Receipts (Tanker)</span>
+              <span class="row__value">${tank.receipts > 0 ? '+' + tank.receipts.toLocaleString('en-IN') + ' L' : '— L'}</span>
+            </div>
+            <div class="row">
+              <span class="row__label">Metered Sales</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="row__value">−${tank.sales.toLocaleString('en-IN')} L</span>
+                <span class="field-badge field-badge--auto">AUTO</span>
+              </div>
+            </div>
+            <div class="row">
+              <span class="row__label fw-700">Expected Closing</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="row__value fw-700" id="exp-${i}">${expected.toLocaleString('en-IN')} L</span>
+                <span class="field-badge field-badge--auto">AUTO</span>
+              </div>
+            </div>
+
+            <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">
+              <label class="form-label">Physical Closing DIP (Actual)</label>
+              <input type="number" class="form-input" id="phys-${i}" value="${tank.physical}"
+                     step="1" oninput="recalcVariance(${i}, ${expected})" />
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+              <span style="font-size:13px;font-weight:700;">Variance</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:18px;font-weight:800;color:${varColor};" id="var-${i}">
+                  ${varIcon} ${variance >= 0 ? '+' : '−'}${Math.abs(variance)} L
+                </span>
+                <span class="field-badge field-badge--auto">AUTO</span>
+              </div>
+            </div>
+
+            ${Math.abs(variance) > 10 ? `
+            <div class="alert alert--red" style="margin-top:8px;padding:6px 10px;">
+              <span>⛔</span> <span style="font-size:12px;">Large variance — investigate before closing shift.</span>
+            </div>` : Math.abs(variance) > 0 ? `
+            <div class="alert alert--amber" style="margin-top:8px;padding:6px 10px;">
+              <span>⚠</span> <span style="font-size:12px;">Minor variance — verify DIP measurement.</span>
+            </div>` : `
+            <div class="alert alert--green" style="margin-top:8px;padding:6px 10px;">
+              <span>✓</span> <span style="font-size:12px;">Tank balanced.</span>
+            </div>`}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function recalcVariance(i, expected) {
+      const physical = parseFloat(document.getElementById('phys-' + i).value) || 0;
+      const variance  = PO.calculateTankVariance(physical, expected);
+      const varColor  = Math.abs(variance) === 0 ? 'var(--green)' : Math.abs(variance) <= 10 ? 'var(--amber)' : 'var(--red)';
+      const varIcon   = Math.abs(variance) === 0 ? '✓' : Math.abs(variance) <= 10 ? '⚠' : '⛔';
+      document.getElementById('var-' + i).style.color = varColor;
+      document.getElementById('var-' + i).textContent = varIcon + ' ' + (variance >= 0 ? '+' : '−') + Math.abs(variance) + ' L';
+    }
+
+    function saveDips() {
+      APP.showToast('Tank DIP readings saved', 'success');
+      setTimeout(() => window.location.href = 'home.html', 1000);
+    }
+
+    renderTanks();
+  </script>
+</body>
+</html>

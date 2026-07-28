@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>DSM Verification — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="dsm-submissions.html" class="top-bar__back">← Submissions</a>
+      <div class="top-bar__meta" style="margin-top:4px;">
+        <div>
+          <div class="top-bar__title">Verify — Amit Kumar</div>
+          <div class="top-bar__subtitle">MPD 01 · Morning Shift · Submitted 14:15</div>
+        </div>
+        <span class="badge badge--amber">PENDING</span>
+      </div>
+    </header>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar" id="tabs">
+      <div class="tab-item tab-item--active" data-target="overview">Overview</div>
+      <div class="tab-item" data-target="readings">Readings</div>
+      <div class="tab-item" data-target="payments">Payments</div>
+      <div class="tab-item" data-target="changes">Changes</div>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- OVERVIEW TAB -->
+      <div data-tab-panel="overview">
+        <div style="padding:12px 16px 0;">
+          <div class="card card--compact" style="background:var(--surface-2);">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><div class="text-xs text-muted fw-700" style="text-transform:uppercase;letter-spacing:.04em;">In-Time</div><div style="font-size:15px;font-weight:700;margin-top:2px;">06:02 AM</div></div>
+              <div><div class="text-xs text-muted fw-700" style="text-transform:uppercase;letter-spacing:.04em;">Out-Time</div><div style="font-size:15px;font-weight:700;margin-top:2px;">14:15 PM</div></div>
+              <div><div class="text-xs text-muted fw-700" style="text-transform:uppercase;letter-spacing:.04em;">Hours Worked</div><div style="font-size:15px;font-weight:700;margin-top:2px;" id="hours-worked">—</div></div>
+              <div><div class="text-xs text-muted fw-700" style="text-transform:uppercase;letter-spacing:.04em;">Total Sale</div><div style="font-size:15px;font-weight:700;margin-top:2px;color:var(--brand);" id="overview-total-sale">—</div></div>
+            </div>
+            <!-- Grade-wise Litres -->
+            <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:8px;">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px;">Fuel Sold by Grade</div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;">
+                  <span>⛽ <span style="font-weight:700;color:#16a34a;">Petrol (MS)</span></span>
+                  <span style="font-weight:800;" id="overview-ms-litres">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;">
+                  <span>🔥 <span style="font-weight:700;color:#d97706;">Speed (Premium)</span></span>
+                  <span style="font-weight:800;">0.00 L</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;">
+                  <span>🛢 <span style="font-weight:700;color:#2563eb;">Diesel (HSD)</span></span>
+                  <span style="font-weight:800;" id="overview-hsd-litres">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Grade Summary</div>
+        <div style="padding:0 16px;">
+          <div class="card card--compact" id="overview-grade-summary">
+            <!-- Dynamic -->
+          </div>
+        </div>
+
+        <div class="section-label">Payment Reconciliation</div>
+        <div style="padding:0 16px;">
+          <div class="card card--compact">
+            <div class="row">
+              <span class="row__label">Expected Collection</span>
+              <div style="display:flex;align-items:center;gap:6px;"><span class="row__value" id="recon-expected">—</span><span class="field-badge field-badge--auto">AUTO</span></div>
+            </div>
+            <div class="row">
+              <span class="row__label">DSM Entered</span>
+              <span class="row__value" id="recon-entered">—</span>
+            </div>
+            <div class="row" style="border-bottom:none;">
+              <span class="row__label fw-700">Difference</span>
+              <span class="row__value" id="recon-diff">—</span>
+            </div>
+          </div>
+          <div class="alert alert--amber hidden" id="recon-alert" style="margin-top:8px;">
+            <span class="alert__icon">⚠</span>
+            <span style="font-size:13px;">Payment entry incomplete. Verify with DSM or add missing entries.</span>
+          </div>
+          <div class="alert alert--green hidden" id="recon-success" style="margin-top:8px;">
+            <span class="alert__icon">✓</span>
+            <span style="font-size:13px;">Collections match fuel sales exactly.</span>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px;margin-bottom:24px;">
+          <button class="btn btn--ghost" onclick="APP.showToast('Returned to DSM for correction','info')">Return to DSM</button>
+          <button class="btn btn--success" onclick="verifyDSM()">Mark Verified ✓</button>
+        </div>
+      </div>
+
+      <!-- READINGS TAB -->
+      <div data-tab-panel="readings" class="hidden">
+        <div class="section-label">Nozzle Readings</div>
+        <div style="padding:0 16px; display:flex; flex-direction:column; gap:10px;" id="readings-container">
+          <!-- Dynamic -->
+        </div>
+      </div>
+
+      <!-- PAYMENTS TAB -->
+      <div data-tab-panel="payments" class="hidden">
+        <div class="section-label">Payment Entries — Amit Kumar</div>
+        <div style="padding:0 16px;" id="payments-container">
+          <!-- Dynamic -->
+        </div>
+      </div>
+
+      <!-- CHANGES TAB -->
+      <div data-tab-panel="changes" class="hidden">
+        <div class="section-label">Audit Trail — Changes Made</div>
+        <div style="padding:0 16px;">
+          <div class="card card--compact" id="changes-container">
+            <!-- Dynamic -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Edit Field Modal -->
+    <div id="edit-modal" class="modal-overlay hidden">
+      <div class="modal-sheet">
+        <div class="modal-sheet__handle"></div>
+        <div class="modal-sheet__title">Edit Field: <span id="edit-field-name"></span></div>
+        <div class="modal-sheet__body">
+          <div class="form-group">
+            <label class="form-label">Original Value</label>
+            <div class="source-field"><span class="source-field__value" id="edit-old-val"></span></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Value</label>
+            <input type="number" step="0.01" class="form-input" id="edit-new-val" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reason <span style="color:var(--red);">*</span></label>
+            <input type="text" class="form-input" id="edit-reason" placeholder="Explain the correction…" />
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn--ghost" style="flex:1;" onclick="closeEdit()">Cancel</button>
+            <button class="btn btn--primary" style="flex:1;" onclick="saveEdit()">Save Correction</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.initTabs('#tabs');
+
+    // ─── State Management ───────────────────────────────────────
+    const STORAGE_KEY = 'pumpops_verif_amit';
+    const initialData = {
+      n01_open: 88201.00,
+      n01_close: 88562.00,
+      n01_test: 2.00,
+      n01_rate: 104.72,
+      n02_open: 128450.00,
+      n02_close: 129102.00,
+      n02_test: 2.00,
+      n02_rate: 92.40,
+      payments: {
+        'Cash': 40000.00,
+        'PhonePe': 12500.00,
+        'Paytm': 4200.00,
+        'Pinelab UPI': 3400.00,
+        'Pinelab Card': 8200.00,
+        'BPCL Loyalty': 2100.00,
+        'Credit (Shree)': 5000.00
+      },
+      changes: [
+        { field: 'PhonePe', oldVal: 12300.00, newVal: 12500.00, date: '27 Jul · 10:42', reason: 'Wrong PhonePe total', user: 'Rajesh Joshi' }
+      ]
+    };
+
+    function getData() {
+      let d = localStorage.getItem(STORAGE_KEY);
+      if (!d) {
+        d = JSON.stringify(initialData);
+        localStorage.setItem(STORAGE_KEY, d);
+      }
+      return JSON.parse(d);
+    }
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    // ─── Render Engine ──────────────────────────────────────────
+    let activeEditField = null;
+
+    function render() {
+      const d = getData();
+
+      // Calculation
+      const n01_net = PO.calculateNetSale(d.n01_close - d.n01_open, d.n01_test) || 0;
+      const n01_amt = PO.calculateSaleAmount(n01_net, d.n01_rate) || 0;
+
+      const n02_net = PO.calculateNetSale(d.n02_close - d.n02_open, d.n02_test) || 0;
+      const n02_amt = PO.calculateSaleAmount(n02_net, d.n02_rate) || 0;
+
+      const totalSale = n01_amt + n02_amt;
+      const totalEntered = Object.values(d.payments).reduce((s, v) => s + v, 0);
+      const diff = PO.calculatePaymentDifference(totalSale, totalEntered);
+
+      // Render hours worked
+      const hoursEl = document.getElementById('hours-worked');
+      if (hoursEl) {
+        hoursEl.textContent = APP.calcDuration('06:02 AM', '02:15 PM') || '8 hrs 13 min';
+      }
+
+      // Render overview card
+      document.getElementById('overview-total-sale').textContent = PO.formatINR(totalSale);
+      document.getElementById('overview-ms-litres').textContent = n01_net.toFixed(2) + ' L';
+      document.getElementById('overview-hsd-litres').textContent = n02_net.toFixed(2) + ' L';
+
+      // Render Grade Summary Card
+      document.getElementById('overview-grade-summary').innerHTML = `
+        <div class="row">
+          <div><span class="badge badge--green" style="margin-right:6px;">MS</span>N01 — Petrol</div>
+          <div style="text-align:right;">
+            <div class="fw-700">${n01_net.toFixed(2)} L</div>
+            <div class="text-xs text-muted">${PO.formatINR(n01_amt)}</div>
+          </div>
+        </div>
+        <div class="row" style="border-bottom:none;">
+          <div><span class="badge badge--blue" style="margin-right:6px;">HSD</span>N02 — Diesel</div>
+          <div style="text-align:right;">
+            <div class="fw-700">${n02_net.toFixed(2)} L</div>
+            <div class="text-xs text-muted">${PO.formatINR(n02_amt)}</div>
+          </div>
+        </div>`;
+
+      // Render Recon card
+      document.getElementById('recon-expected').textContent = PO.formatINR(totalSale);
+      document.getElementById('recon-entered').textContent = PO.formatINR(totalEntered);
+      
+      const diffEl = document.getElementById('recon-diff');
+      if (Math.abs(diff) < 0.05) {
+        diffEl.textContent = '₹0.00';
+        diffEl.style.color = 'var(--green)';
+        document.getElementById('recon-success').classList.remove('hidden');
+        document.getElementById('recon-alert').classList.add('hidden');
+      } else {
+        diffEl.textContent = (diff > 0 ? '−' : '+') + PO.formatINR(Math.abs(diff));
+        diffEl.style.color = 'var(--amber)';
+        document.getElementById('recon-success').classList.add('hidden');
+        document.getElementById('recon-alert').classList.remove('hidden');
+      }
+
+      // Render Readings Tab
+      document.getElementById('readings-container').innerHTML = `
+        <div class="nozzle-card">
+          <div class="nozzle-card__header">
+            <span class="nozzle-card__mpd">N01 — MS (Petrol)</span>
+            <span class="nozzle-card__grade" style="background:rgba(34,197,94,.3);">Bay 1</span>
+          </div>
+          <div class="nozzle-card__body">
+            <div class="row"><span class="row__label">Opening Reading</span><span class="row__value">${d.n01_open.toLocaleString('en-IN', {minimumFractionDigits:2})}</span></div>
+            <div class="row">
+              <span class="row__label">Closing Reading</span>
+              <span class="row__value">
+                ${d.n01_close.toLocaleString('en-IN', {minimumFractionDigits:2})} 
+                <button onclick="openEdit('n01_close', 'N01 Closing Reading', ${d.n01_close})" style="font-size:11px;color:var(--brand);cursor:pointer;background:none;border:none;font-family:inherit;font-weight:700;">Edit</button>
+              </span>
+            </div>
+            <div class="row">
+              <span class="row__label">Testing Deduction</span>
+              <span class="row__value">
+                ${d.n01_test.toFixed(2)} L
+                <button onclick="openEdit('n01_test', 'N01 Testing Litres', ${d.n01_test})" style="font-size:11px;color:var(--brand);cursor:pointer;background:none;border:none;font-family:inherit;font-weight:700;">Edit</button>
+              </span>
+            </div>
+            <div class="row"><span class="row__label">Net Sale</span><div style="display:flex;align-items:center;gap:6px;"><span class="row__value">${n01_net.toFixed(2)} L</span><span class="field-badge field-badge--auto">AUTO</span></div></div>
+            <div class="row" style="border-bottom:none;"><span class="row__label">Sale Amount</span><div style="display:flex;align-items:center;gap:6px;"><span class="row__value text-brand fw-700">${PO.formatINR(n01_amt)}</span><span class="field-badge field-badge--auto">AUTO</span></div></div>
+          </div>
+        </div>
+
+        <div class="nozzle-card">
+          <div class="nozzle-card__header">
+            <span class="nozzle-card__mpd">N02 — HSD (Diesel)</span>
+            <span class="nozzle-card__grade" style="background:rgba(96,165,250,.3);">Bay 2</span>
+          </div>
+          <div class="nozzle-card__body">
+            <div class="row"><span class="row__label">Opening Reading</span><span class="row__value">${d.n02_open.toLocaleString('en-IN', {minimumFractionDigits:2})}</span></div>
+            <div class="row">
+              <span class="row__label">Closing Reading</span>
+              <span class="row__value">
+                ${d.n02_close.toLocaleString('en-IN', {minimumFractionDigits:2})} 
+                <button onclick="openEdit('n02_close', 'N02 Closing Reading', ${d.n02_close})" style="font-size:11px;color:var(--brand);cursor:pointer;background:none;border:none;font-family:inherit;font-weight:700;">Edit</button>
+              </span>
+            </div>
+            <div class="row">
+              <span class="row__label">Testing Deduction</span>
+              <span class="row__value">
+                ${d.n02_test.toFixed(2)} L
+                <button onclick="openEdit('n02_test', 'N02 Testing Litres', ${d.n02_test})" style="font-size:11px;color:var(--brand);cursor:pointer;background:none;border:none;font-family:inherit;font-weight:700;">Edit</button>
+              </span>
+            </div>
+            <div class="row"><span class="row__label">Net Sale</span><div style="display:flex;align-items:center;gap:6px;"><span class="row__value">${n02_net.toFixed(2)} L</span><span class="field-badge field-badge--auto">AUTO</span></div></div>
+            <div class="row" style="border-bottom:none;"><span class="row__label">Sale Amount</span><div style="display:flex;align-items:center;gap:6px;"><span class="row__value text-brand fw-700">${PO.formatINR(n02_amt)}</span><span class="field-badge field-badge--auto">AUTO</span></div></div>
+          </div>
+        </div>`;
+
+      // Render Payments Tab
+      document.getElementById('payments-container').innerHTML = `
+        <div class="card card--compact">
+          ${Object.entries(d.payments).map(([mode, amt]) => `
+            <div class="row">
+              <span class="row__label">${mode}</span>
+              <span class="row__value">
+                ${PO.formatINR(amt)} 
+                <button onclick="openEdit('pay_${mode}', '${mode} Payment', ${amt})" style="font-size:11px;color:var(--brand);cursor:pointer;background:none;border:none;font-family:inherit;font-weight:700;">Edit</button>
+              </span>
+            </div>`).join('')}
+          <div class="row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:8px;border-bottom:none;">
+            <span style="font-weight:700;">Total Entered</span>
+            <div style="display:flex;align-items:center;gap:6px;"><span class="row__value fw-700">${PO.formatINR(totalEntered)}</span><span class="field-badge field-badge--auto">AUTO</span></div>
+          </div>
+        </div>`;
+
+      // Render Audit Trail
+      document.getElementById('changes-container').innerHTML = d.changes.length ? d.changes.map((c, i) => `
+        <div class="row" style="flex-direction:column;align-items:flex-start;gap:4px;padding:10px 0;${i === d.changes.length-1 ? 'border-bottom:none;' : ''}">
+          <div style="display:flex;justify-content:space-between;width:100%;">
+            <span style="font-size:12px;font-weight:700;">${c.field}</span>
+            <span style="font-size:10px;color:var(--text-muted);">${c.date}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);">${PO.formatINR(c.oldVal)} → <strong style="color:var(--green);">${PO.formatINR(c.newVal)}</strong></div>
+          <div style="font-size:11px;color:var(--text-muted);">${c.user} — ${c.reason}</div>
+        </div>`).join('') : '<div style="padding:16px;text-align:center;color:var(--text-muted);">No modifications logged</div>';
+    }
+
+    // ─── Modal Edit Callbacks ──────────────────────────────────
+    function openEdit(key, label, currentVal) {
+      activeEditField = key;
+      document.getElementById('edit-field-name').textContent = label;
+      document.getElementById('edit-old-val').textContent = currentVal.toFixed(2);
+      document.getElementById('edit-new-val').value = currentVal.toFixed(2);
+      document.getElementById('edit-reason').value = '';
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+    function closeEdit() { document.getElementById('edit-modal').classList.add('hidden'); }
+
+    function saveEdit() {
+      const reason = document.getElementById('edit-reason').value.trim();
+      const newVal = parseFloat(document.getElementById('edit-new-val').value);
+      if (isNaN(newVal) || newVal < 0) { APP.showToast('Enter a valid positive number', 'error'); return; }
+      if (!reason) { APP.showToast('Reason is required', 'error'); return; }
+
+      const d = getData();
+      let oldVal = 0;
+
+      // Update state
+      if (activeEditField.startsWith('pay_')) {
+        const mode = activeEditField.replace('pay_', '');
+        oldVal = d.payments[mode];
+        d.payments[mode] = newVal;
+      } else {
+        oldVal = d[activeEditField];
+        d[activeEditField] = newVal;
+      }
+
+      // Log change
+      d.changes.unshift({
+        field: document.getElementById('edit-field-name').textContent,
+        oldVal,
+        newVal,
+        date: new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short'}) + ' · ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}),
+        reason,
+        user: 'Rajesh Joshi'
+      });
+
+      saveData(d);
+      render();
+      closeEdit();
+      APP.showToast('Correction saved and logged in Audit Trail', 'success');
+    }
+
+    function verifyDSM() {
+      APP.showConfirmModal({
+        title: 'Mark as Verified?',
+        body: 'This will mark Amit Kumar\'s shift as verified. Payment summaries will lock for settlement.',
+        confirmLabel: 'Verify',
+        confirmClass: 'btn--success',
+        onConfirm: () => {
+          APP.showToast('Shift verified successfully', 'success');
+          window.location.href = 'home.html';
+        }
+      });
+    }
+
+    // Init
+    render();
+  </script>
+</body>
+</html>

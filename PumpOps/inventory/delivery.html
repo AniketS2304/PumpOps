@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Delivery — PumpOps Inventory</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Inventory</a>
+      <div class="top-bar__title">Record Delivery</div>
+      <div class="top-bar__subtitle">Log incoming stock</div>
+    </header>
+    <div class="page-content page-content--no-nav">
+      <div style="padding:12px 16px;">
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Product</label>
+            <select class="form-select">
+              <option>Engine Oil 1L</option>
+              <option>Engine Oil 5L</option>
+              <option>Gear Oil 1L</option>
+              <option>Grease 500g</option>
+              <option>Air Freshener</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supplier / Invoice No.</label>
+            <input type="text" class="form-input" placeholder="Supplier name or invoice #" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quantity Received</label>
+            <input type="number" class="form-input" placeholder="0" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unit Rate (₹)</label>
+            <input type="number" class="form-input" placeholder="0.00" step="0.01" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Delivery Date</label>
+            <input type="date" class="form-input" value="2026-07-27" />
+          </div>
+        </div>
+        <button class="btn btn--primary" style="margin-top:12px;" onclick="APP.showToast('Delivery recorded','success')">Record Delivery</button>
+      </div>
+    </div>
+  </div>
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+</body>
+</html>

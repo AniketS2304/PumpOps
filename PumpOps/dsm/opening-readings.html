@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Opening Readings — PumpOps DSM</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="start-shift.html" class="top-bar__back">← Start Shift</a>
+      <div class="top-bar__title">Opening Readings</div>
+      <div class="top-bar__subtitle">MPD 01 · Morning Shift · 27 Jul 2026</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+      <div class="alert alert--blue" style="margin:12px 16px 0;">
+        <span class="alert__icon">ℹ</span>
+        <span style="font-size:13px;">Opening reading should match the previous shift's closing reading. Confirm before proceeding.</span>
+      </div>
+
+      <!-- Nozzle 01 — MS -->
+      <div class="section-label">Nozzle 01 — MS (Petrol)</div>
+      <div style="padding:0 16px 0;">
+        <div class="nozzle-card">
+          <div class="nozzle-card__header">
+            <span class="nozzle-card__mpd">MPD 01 · N01</span>
+            <span class="nozzle-card__grade" style="background:rgba(34,197,94,.3);">MS</span>
+          </div>
+          <div class="nozzle-card__body">
+            <div class="nozzle-card__dsm">Tank: MS T-1 &nbsp;·&nbsp; Bay 1</div>
+
+            <!-- Previous Close (locked) -->
+            <div class="form-group">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <label class="form-label" style="margin:0;">Previous Closing</label>
+                <span class="field-badge field-badge--prev">PREVIOUS SHIFT</span>
+              </div>
+              <div class="source-field">
+                <span class="source-field__value">88,201.00</span>
+                <span style="font-size:12px;color:var(--text-muted);">Litres</span>
+              </div>
+            </div>
+
+            <!-- Opening Reading (editable) -->
+            <div class="form-group" style="margin-bottom:6px;">
+              <label class="form-label">Opening Reading</label>
+              <input type="number" class="form-input" id="n01-open" value="88201.00"
+                     step="0.01" placeholder="Enter opening reading"
+                     oninput="validateOpening('n01', 88201.00)" />
+            </div>
+
+            <!-- Match indicator -->
+            <div id="n01-match" class="alert alert--green" style="padding:6px 10px;">
+              <span>✓</span> <span style="font-size:12px;">Matches previous shift closing</span>
+            </div>
+            <div id="n01-mismatch" class="alert alert--amber hidden" style="padding:6px 10px;">
+              <span>⚠</span> <span style="font-size:12px;">Opening reading differs from previous closing. Please confirm or enter reason.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nozzle 02 — HSD -->
+      <div class="section-label">Nozzle 02 — HSD (Diesel)</div>
+      <div style="padding:0 16px 0;">
+        <div class="nozzle-card">
+          <div class="nozzle-card__header">
+            <span class="nozzle-card__mpd">MPD 01 · N02</span>
+            <span class="nozzle-card__grade" style="background:rgba(96,165,250,.3);">HSD</span>
+          </div>
+          <div class="nozzle-card__body">
+            <div class="nozzle-card__dsm">Tank: HSD T-3 &nbsp;·&nbsp; Bay 2</div>
+
+            <div class="form-group">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <label class="form-label" style="margin:0;">Previous Closing</label>
+                <span class="field-badge field-badge--prev">PREVIOUS SHIFT</span>
+              </div>
+              <div class="source-field">
+                <span class="source-field__value">1,28,450.00</span>
+                <span style="font-size:12px;color:var(--text-muted);">Litres</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:6px;">
+              <label class="form-label">Opening Reading</label>
+              <input type="number" class="form-input" id="n02-open" value="128450.00"
+                     step="0.01" placeholder="Enter opening reading"
+                     oninput="validateOpening('n02', 128450.00)" />
+            </div>
+
+            <div id="n02-match" class="alert alert--green" style="padding:6px 10px;">
+              <span>✓</span> <span style="font-size:12px;">Matches previous shift closing</span>
+            </div>
+            <div id="n02-mismatch" class="alert alert--amber hidden" style="padding:6px 10px;">
+              <span>⚠</span> <span style="font-size:12px;">Opening reading differs from previous closing.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reason field (shown if mismatch) -->
+      <div id="mismatch-reason" class="hidden" style="padding:0 16px;">
+        <div class="form-group" style="margin-top:12px;">
+          <label class="form-label">Reason for difference <span style="color:var(--red);">*</span></label>
+          <input type="text" class="form-input" placeholder="e.g. Meter re-set by technician" />
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <a href="start-shift.html" class="btn btn--ghost">Back</a>
+        <a href="active-shift.html" class="btn btn--primary" id="btn-save" onclick="saveOpenings()">Save &amp; Continue</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    function validateOpening(id, prevClose) {
+      const val = parseFloat(document.getElementById(id + '-open').value);
+      const match = document.getElementById(id + '-match');
+      const mismatch = document.getElementById(id + '-mismatch');
+      if (isNaN(val)) { match.classList.add('hidden'); mismatch.classList.add('hidden'); return; }
+      const differs = Math.abs(val - prevClose) > 0.01;
+      match.classList.toggle('hidden', differs);
+      mismatch.classList.toggle('hidden', !differs);
+      document.getElementById('mismatch-reason').classList.toggle('hidden',
+        !document.getElementById('n01-mismatch').classList.contains('hidden') ||
+        !document.getElementById('n02-mismatch').classList.contains('hidden') ? false : true
+      );
+    }
+    function saveOpenings() {
+      APP.showToast('Opening readings saved', 'success');
+    }
+  </script>
+</body>
+</html>

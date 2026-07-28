@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>PumpOps V2 — Screen Gallery</title>
+  <link rel="stylesheet" href="shared/styles.css" />
+  <style>
+    body { background: #f1f5f9; }
+    .gallery-header {
+      background: var(--brand);
+      color: #fff;
+      padding: 40px 24px 24px;
+      text-align: center;
+    }
+    .gallery-header h1 { font-size: 26px; font-weight: 800; }
+    .gallery-header p  { font-size: 13px; opacity: .75; margin-top: 6px; }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-header {
+      grid-column: 1 / -1;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      padding: 8px 0 0;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .screen-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      transition: transform .15s, box-shadow .15s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+    .screen-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+    .screen-card__thumb {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+    .screen-card__info { padding: 12px 14px 14px; }
+    .screen-card__role {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 4px;
+    }
+    .screen-card__name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .screen-card__desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+    .screen-card__features { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .screen-card__tag {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--surface-2);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .screen-card__tag--calc { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .screen-card__tag--live { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+    .screen-card__tag--audit { background: #fefce8; color: #a16207; border-color: #fef08a; }
+
+    .role-dsm     { color: var(--green); }
+    .role-manager { color: var(--brand); }
+    .role-inv     { color: var(--amber); }
+    .role-owner   { color: #7c3aed; }
+
+    .hero-links { display: flex; justify-content: center; gap: 12px; padding: 16px; flex-wrap: wrap; }
+    .hero-btn {
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-btn--light { background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+    .hero-btn--white { background: #fff; color: var(--brand); }
+
+    .legend {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      padding: 12px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+  <div class="gallery-header">
+    <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:8px;">PumpOps V2 Prototype</div>
+    <h1>⛽ Screen Gallery</h1>
+    <p>Complete mobile prototype — 40+ screens across 4 roles</p>
+    <p style="margin-top:4px;">SPS Bharat Petroleum · Pune · DSR Workflow</p>
+
+    <div class="hero-links">
+      <a href="login.html" class="hero-btn hero-btn--white">Login Screen</a>
+      <a href="dsm/home.html" class="hero-btn hero-btn--light">DSM Flow</a>
+      <a href="manager/home.html" class="hero-btn hero-btn--light">Manager Flow</a>
+      <a href="owner/dashboard.html" class="hero-btn hero-btn--light">Owner Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Field language legend -->
+  <div class="legend">
+    <div class="legend-item"><span class="field-badge field-badge--auto">AUTO</span> Calculated by system</div>
+    <div class="legend-item"><span class="field-badge field-badge--source">SHIFT PRICE</span> Locked from setup</div>
+    <div class="legend-item"><span class="field-badge field-badge--prev">PREVIOUS SHIFT</span> From prior shift</div>
+    <div class="legend-item">📝 User enters</div>
+  </div>
+
+  <div class="gallery-grid">
+
+    <!-- ═══════════════════ SHARED ═══════════════════ -->
+    <div class="section-header">Shared / Authentication</div>
+
+    <a href="login.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:linear-gradient(135deg,#0f4c81 0%,#1a6ab1 100%);">🔐</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role" style="color:var(--text-muted);">All Roles</div>
+        <div class="screen-card__name">Login</div>
+        <div class="screen-card__desc">Role selector with demo quick-login links</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Role Selector</span>
+          <span class="screen-card__tag">Demo Links</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ═══════════════════ DSM ═══════════════════ -->
+    <div class="section-header">DSM — Shift Workflow</div>
+
+    <a href="dsm/home.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f0fdf4;">⛽</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-dsm">DSM</div>
+        <div class="screen-card__name">Home</div>
+        <div class="screen-card__desc">Shift assignment, progress checklist, nozzle summary</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--live">LIVE STATUS</span>
+          <span class="screen-card__tag">Nozzle Cards</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="dsm/start-shift.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#eff6ff;">▶</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-dsm">DSM</div>
+        <div class="screen-card__name">Start Shift</div>
+        <div class="screen-card__desc">Assignment confirmation, locked fuel rates, auto-recorded In-Time</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO TIME</span>
+          <span class="screen-card__tag">SHIFT PRICE</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="dsm/opening-readings.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fdfde8;">📊</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-dsm">DSM</div>
+        <div class="screen-card__name">Opening Readings</div>
+        <div class="screen-card__desc">Compare against previous closing, match/mismatch validation</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">PREV SHIFT</span>
+          <span class="screen-card__tag screen-card__tag--live">Validation</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="dsm/active-shift.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#eff6ff;">🟢</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-dsm">DSM</div>
+        <div class="screen-card__name">Active Shift</div>
+        <div class="screen-card__desc">Live status, nozzle assignments, offline sync indicator</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--live">OFFLINE OK</span>
+          <span class="screen-card__tag">Sync Status</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="dsm/closing-readings.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#eff6ff;">🧮</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-dsm">DSM</div>
+        <div class="screen-card__name">Closing Readings ★</div>
+        <div class="screen-card__desc">Per-nozzle closing entry, live gross/net/amount auto-calc, drill-down</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO CALC</span>
+          <span class="screen-card__tag">Drill-down</span>
+          <span class="screen-card__tag">Validation</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="dsm/payments.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f0fdf4;">💳</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-dsm">DSM</div>
+        <div class="screen-card__name">Payment Entry ★</div>
+        <div class="screen-card__desc">Multi-mode payment entry, expected vs entered, balance progress bar</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO TOTAL</span>
+          <span class="screen-card__tag">Balance Bar</span>
+          <span class="screen-card__tag">Add/Remove</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="dsm/review-submit.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fef2f2;">📋</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-dsm">DSM</div>
+        <div class="screen-card__name">Review &amp; Submit</div>
+        <div class="screen-card__desc">Full shift summary, reconciliation diff, confirm and submit to manager</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Reconciliation</span>
+          <span class="screen-card__tag screen-card__tag--audit">Audit Lock</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="dsm/submitted.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f0fdf4;">✅</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-dsm">DSM</div>
+        <div class="screen-card__name">Submitted</div>
+        <div class="screen-card__desc">Success state, auto-recorded Out-Time, sync confirmation</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO TIME</span>
+          <span class="screen-card__tag screen-card__tag--live">Synced</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ═══════════════════ MANAGER ═══════════════════ -->
+    <div class="section-header">Shift Manager — Operations</div>
+
+    <a href="manager/home.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:linear-gradient(135deg,#0f4c81 0%,#1a6ab1 100%);color:#fff;font-size:24px;">📋</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Manager Home</div>
+        <div class="screen-card__desc">KPI header, DSM status cards, alerts, quick actions</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--live">LIVE KPIs</span>
+          <span class="screen-card__tag">DSM Status</span>
+          <span class="screen-card__tag">Alerts</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/shift-setup.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#eff6ff;">⚙</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Shift Setup (4 steps)</div>
+        <div class="screen-card__desc">Fuel prices, opening DIP, DSM roster, review &amp; open</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Stepper</span>
+          <span class="screen-card__tag">DSM Roster</span>
+          <span class="screen-card__tag">Opening DIP</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/live-shift.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#eff6ff;">🔴</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Live Shift Monitor</div>
+        <div class="screen-card__desc">All DSMs real-time status, filter pills, KPI row</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--live">LIVE</span>
+          <span class="screen-card__tag">Filter Pills</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/dsm-submissions.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fffbeb;">📬</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">DSM Submissions</div>
+        <div class="screen-card__desc">All DSM submissions list with status and quick verify links</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Status Badges</span>
+          <span class="screen-card__tag">Filter</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/dsm-verification.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fffbeb;">🔍</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">DSM Verification ★</div>
+        <div class="screen-card__desc">Tabbed: Overview/Readings/Payments/Changes. Edit with reason, audit trail</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Tabs</span>
+          <span class="screen-card__tag screen-card__tag--audit">Audit Trail</span>
+          <span class="screen-card__tag">Edit Fields</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/credit-sales.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fef2f2;">🧾</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Credit Sale ★</div>
+        <div class="screen-card__desc">Qty only entry, rate locked, amount auto-calc, credit utilization bar</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO AMOUNT</span>
+          <span class="screen-card__tag">Credit Status</span>
+          <span class="screen-card__tag">Limit Warning</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/cash-count.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f0fdf4;">💵</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Cash Count ★</div>
+        <div class="screen-card__desc">Per-denomination count, auto-total, auto-variance vs expected, remark</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO TOTAL</span>
+          <span class="screen-card__tag screen-card__tag--calc">AUTO VARIANCE</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/tank-dip.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fdfde8;">⛽</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Tank DIP ★</div>
+        <div class="screen-card__desc">Opening+receipts-sales=expected, physical entry, auto variance, color alerts</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO EXPECTED</span>
+          <span class="screen-card__tag screen-card__tag--calc">AUTO VARIANCE</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/adjustments.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f1f5f9;">⚖</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Adjustments</div>
+        <div class="screen-card__desc">Expenses, staff shorts, sales promos — net auto-calculated for settlement</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">3 Types</span>
+          <span class="screen-card__tag screen-card__tag--calc">AUTO NET</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/credit-customers.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fef2f2;">👤</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Credit Customers</div>
+        <div class="screen-card__desc">Utilization bars, aging, overdue badges, action buttons</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Utilization</span>
+          <span class="screen-card__tag">Aging</span>
+          <span class="screen-card__tag">Overdue</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/settlement.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#eff6ff;">🏦</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Digital Settlement</div>
+        <div class="screen-card__desc">Gateway vs bank, after-midnight adj, receivable auto-calculated</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO DIFF</span>
+          <span class="screen-card__tag">T+1</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="manager/shift-close.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fef2f2;">🔒</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-manager">Shift Manager</div>
+        <div class="screen-card__name">Close Shift ★</div>
+        <div class="screen-card__desc">Full review: sales/collections/cash/tanks/settlement before locking</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Checklist</span>
+          <span class="screen-card__tag screen-card__tag--audit">Lock</span>
+          <span class="screen-card__tag">Full Summary</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ═══════════════════ INVENTORY ═══════════════════ -->
+    <div class="section-header">Inventory / Supervisor</div>
+
+    <a href="inventory/home.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fffbeb;">📦</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-inv">Inventory</div>
+        <div class="screen-card__name">Inventory Home</div>
+        <div class="screen-card__desc">Stock value KPI, low-stock alerts, quick actions, stock overview</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Alerts</span>
+          <span class="screen-card__tag">Stock Summary</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="inventory/stock-count.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#eff6ff;">🔢</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-inv">Inventory</div>
+        <div class="screen-card__name">Stock Count ★</div>
+        <div class="screen-card__desc">Per-product: expected auto-calc, physical entry, variance auto-calc</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO EXPECTED</span>
+          <span class="screen-card__tag screen-card__tag--calc">AUTO VARIANCE</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="inventory/stock.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f0fdf4;">📋</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-inv">Inventory</div>
+        <div class="screen-card__name">Current Stock</div>
+        <div class="screen-card__desc">All products with movement breakdown and variance</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Movement</span>
+          <span class="screen-card__tag">Variance</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="inventory/delivery.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fdfde8;">🚚</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-inv">Inventory</div>
+        <div class="screen-card__name">Record Delivery</div>
+        <div class="screen-card__desc">Log incoming oil/lube stock from suppliers</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Supplier</span>
+          <span class="screen-card__tag">Invoice</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="inventory/variance.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fef2f2;">⚠</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-inv">Inventory</div>
+        <div class="screen-card__name">Variance Report</div>
+        <div class="screen-card__desc">Products with physical vs expected discrepancies</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Filtered</span>
+          <span class="screen-card__tag screen-card__tag--calc">AUTO</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ═══════════════════ OWNER ═══════════════════ -->
+    <div class="section-header">Owner — Reporting &amp; Analytics (Read-Only)</div>
+
+    <a href="owner/dashboard.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:linear-gradient(135deg,#7c3aed,#9f5dfa);color:#fff;font-size:28px;">📈</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-owner">Owner</div>
+        <div class="screen-card__name">Owner Dashboard ★</div>
+        <div class="screen-card__desc">Total sales hero, collections, reconciliation status, shift status, alerts</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--live">LIVE</span>
+          <span class="screen-card__tag">Reconciliation</span>
+          <span class="screen-card__tag">Alerts</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="owner/dsr.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f3f0ff;">📰</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-owner">Owner</div>
+        <div class="screen-card__name">Daily Sales Report ★★</div>
+        <div class="screen-card__desc">4 tabs: Full DSR driven by calculation engine. Grade/payments/adjustments/tanks</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">FULL CALC</span>
+          <span class="screen-card__tag">4 Tabs</span>
+          <span class="screen-card__tag">DSM Perf</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="owner/credit.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#fef2f2;">💳</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-owner">Owner</div>
+        <div class="screen-card__name">Credit Ledger</div>
+        <div class="screen-card__desc">All customers, utilization bars, aging, overdue amounts</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">Utilization</span>
+          <span class="screen-card__tag">Aging</span>
+          <span class="screen-card__tag">Read-Only</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="owner/payroll.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f0fdf4;">👥</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-owner">Owner</div>
+        <div class="screen-card__name">Staff Payroll ★</div>
+        <div class="screen-card__desc">Per-DSM payroll: attendance, advances, shortages, net payable auto-calc + drill</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag screen-card__tag--calc">AUTO PAYROLL</span>
+          <span class="screen-card__tag">Drill-down</span>
+          <span class="screen-card__tag">Attendance</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="owner/reports.html" class="screen-card">
+      <div class="screen-card__thumb" style="background:#f3f0ff;">📊</div>
+      <div class="screen-card__info">
+        <div class="screen-card__role role-owner">Owner</div>
+        <div class="screen-card__name">Reports</div>
+        <div class="screen-card__desc">7-day sales trend, grade mix chart, DSM performance scoring</div>
+        <div class="screen-card__features">
+          <span class="screen-card__tag">7-day trend</span>
+          <span class="screen-card__tag">Grade mix</span>
+          <span class="screen-card__tag">DSM scores</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">
+    PumpOps V2 Prototype · Not production software · 27 Jul 2026
+  </div>
+
+  <script src="shared/calculations.js"></script>
+  <script src="shared/mock-data.js"></script>
+</body>
+</html>

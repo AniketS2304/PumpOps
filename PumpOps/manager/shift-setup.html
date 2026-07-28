@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Shift Setup — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Manager Home</a>
+      <div class="top-bar__title">Shift Setup</div>
+      <div class="top-bar__subtitle">Configure before opening the shift</div>
+    </header>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step-item step-item--done" data-step="1">
+        <div class="step-dot">✓</div>
+        <span>Prices</span>
+      </div>
+      <div class="step-item step-item--done" data-step="2">
+        <div class="step-dot">✓</div>
+        <span>DIP</span>
+      </div>
+      <div class="step-item step-item--active" data-step="3">
+        <div class="step-dot">3</div>
+        <span>Roster</span>
+      </div>
+      <div class="step-item" data-step="4">
+        <div class="step-dot">4</div>
+        <span>Review</span>
+      </div>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- STEP 1: Fuel Prices (completed) -->
+      <div id="step1" class="hidden">
+        <div class="section-label">Step 1 — Fuel Prices</div>
+        <div style="padding:0 16px;">
+          <div id="price-lock-banner" class="hidden">
+            <div class="alert alert--green" style="margin-bottom:10px;">
+              <span class="alert__icon">🔒</span>
+              <div><strong>Prices locked for today</strong><br/><span style="font-size:12px;">Already set. You can update them once per day.</span></div>
+            </div>
+          </div>
+          <div class="alert alert--blue" style="margin-bottom:12px;">
+            <span class="alert__icon">ℹ</span>
+            <span style="font-size:13px;">Prices must be set before DSMs begin dispensing. They become locked source values for all calculations.</span>
+          </div>
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">MS (Petrol) — ₹ per Litre</label>
+              <input type="number" class="form-input" id="price-ms" value="104.72" step="0.01" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">HSD (Diesel) — ₹ per Litre</label>
+              <input type="number" class="form-input" id="price-hsd" value="92.40" step="0.01" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Speed/Premium — ₹ per Litre</label>
+              <input type="number" class="form-input" id="price-speed" value="113.50" step="0.01" />
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <a href="home.html" class="btn btn--ghost">Cancel</a>
+          <button class="btn btn--primary" onclick="savePricesAndNext()">Save Prices &amp; Next →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Opening DIP (completed) -->
+      <div id="step2" class="hidden">
+        <div class="section-label">Step 2 — Opening Tank DIP</div>
+        <div style="padding:0 16px;">
+          <div class="alert alert--blue" style="margin-bottom:12px;">
+            <span class="alert__icon">ℹ</span>
+            <span style="font-size:13px;">Dip physically each tank and enter the measured volume. This becomes the opening stock for this shift.</span>
+          </div>
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">MS T-1 (Petrol Tank 1)</label>
+              <div style="position:relative;">
+                <input type="number" class="form-input" id="dip-t1" value="12820" step="1" />
+                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">L</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">MS T-2 (Petrol Tank 2)</label>
+              <div style="position:relative;">
+                <input type="number" class="form-input" id="dip-t2" value="10200" step="1" />
+                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">L</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">HSD T-3 (Diesel Tank)</label>
+              <div style="position:relative;">
+                <input type="number" class="form-input" id="dip-t3" value="18450" step="1" />
+                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">L</span>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Speed T-4 (Premium Tank)</label>
+              <div style="position:relative;">
+                <input type="number" class="form-input" id="dip-t4" value="5200" step="1" />
+                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);">L</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--ghost" onclick="goStep(1)">← Back</button>
+          <button class="btn btn--primary" onclick="goStep(3)">Next: Roster →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: DSM Roster (active) -->
+      <div id="step3">
+        <div class="section-label">Step 3 — DSM Roster Assignment</div>
+        <div style="padding:0 16px; display:flex; flex-direction:column; gap:8px;">
+
+          <div class="card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Amit Kumar</div>
+            <div class="form-group">
+              <label class="form-label">Assigned MPD</label>
+              <select class="form-select">
+                <option selected>MPD 01</option>
+                <option>MPD 02</option>
+                <option>MPD 03</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Assigned Bays</label>
+              <div style="display:flex;gap:10px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;">
+                  <input type="checkbox" checked /> Bay 1
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;">
+                  <input type="checkbox" checked /> Bay 2
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Sachin Patil</div>
+            <div class="form-group">
+              <label class="form-label">Assigned MPD</label>
+              <select class="form-select">
+                <option>MPD 01</option>
+                <option selected>MPD 02</option>
+                <option>MPD 03</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Assigned Bays</label>
+              <div style="display:flex;gap:10px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;">
+                  <input type="checkbox" checked /> Bay 1
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;">
+                  <input type="checkbox" checked /> Bay 2
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Omkar Shinde</div>
+            <div class="form-group">
+              <label class="form-label">Assigned MPD</label>
+              <select class="form-select">
+                <option>MPD 01</option>
+                <option>MPD 02</option>
+                <option selected>MPD 03</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Assigned Bays</label>
+              <div style="display:flex;gap:10px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;">
+                  <input type="checkbox" checked /> Bay 1
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;">
+                  <input type="checkbox" /> Bay 2
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--ghost" onclick="goStep(2)">← Back</button>
+          <button class="btn btn--primary" onclick="goStep(4)">Next: Review →</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Review -->
+      <div id="step4" class="hidden">
+        <div class="section-label">Step 4 — Review &amp; Open Shift</div>
+        <div style="padding:0 16px;">
+          <div class="card">
+            <div class="checklist-item">
+              <span class="checklist-item__label">Fuel prices configured</span>
+              <span class="checklist-item__status text-green">✓</span>
+            </div>
+            <div class="checklist-item">
+              <span class="checklist-item__label">4 tank opening DIPs entered</span>
+              <span class="checklist-item__status text-green">✓</span>
+            </div>
+            <div class="checklist-item">
+              <span class="checklist-item__label">3 DSMs assigned</span>
+              <span class="checklist-item__status text-green">✓</span>
+            </div>
+            <div class="checklist-item" style="border-bottom:none;">
+              <span class="checklist-item__label">Shift date &amp; time</span>
+              <span class="checklist-item__status">27 Jul · 14:00</span>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="card card--compact" style="background:var(--surface-2);">
+              <div class="row"><span class="row__label">MS Rate</span><span class="row__value">₹104.72 / L</span></div>
+              <div class="row"><span class="row__label">HSD Rate</span><span class="row__value">₹92.40 / L</span></div>
+              <div class="row" style="border-bottom:none;"><span class="row__label">Speed Rate</span><span class="row__value">₹113.50 / L</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--ghost" onclick="goStep(3)">← Back</button>
+          <button class="btn btn--success" onclick="openShift()">⛽ OPEN SHIFT</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    function goStep(n) {
+      [1,2,3,4].forEach(i => {
+        document.getElementById('step' + i).classList.toggle('hidden', i !== n);
+      });
+      const steps = document.querySelectorAll('.step-item');
+      steps.forEach((el, i) => {
+        const dot = el.querySelector('.step-dot');
+        el.classList.remove('step-item--active','step-item--done');
+        if (i + 1 < n) { el.classList.add('step-item--done'); dot.textContent = '✓'; }
+        else if (i + 1 === n) { el.classList.add('step-item--active'); dot.textContent = i + 1; }
+        else { dot.textContent = i + 1; }
+      });
+      window.scrollTo(0, 0);
+    }
+    function savePricesAndNext() {
+      const ms = parseFloat(document.getElementById('price-ms').value);
+      const hsd = parseFloat(document.getElementById('price-hsd').value);
+      const speed = parseFloat(document.getElementById('price-speed').value);
+      if (isNaN(ms) || isNaN(hsd) || isNaN(speed)) {
+        APP.showToast('Enter all fuel prices', 'error'); return;
+      }
+      APP.setPrices(ms, hsd, speed);
+      APP.showToast('Prices saved and locked for today!', 'success');
+      goStep(2);
+    }
+    function openShift() {
+      APP.showConfirmModal({
+        title: 'Open Evening Shift?',
+        body: 'This will lock the fuel prices and allow DSMs to start their shifts. Confirm?',
+        confirmLabel: 'Open Shift',
+        confirmClass: 'btn--success',
+        onConfirm: () => { APP.showToast('Evening Shift opened!', 'success'); window.location.href = 'home.html'; }
+      });
+    }
+    // Show lock banner if prices already set today
+    (function() {
+      const p = APP.getPrices();
+      if (APP.arePricesLockedToday()) {
+        document.getElementById('price-lock-banner').classList.remove('hidden');
+        document.getElementById('price-ms').value = p.MS.toFixed(2);
+        document.getElementById('price-hsd').value = p.HSD.toFixed(2);
+        document.getElementById('price-speed').value = p.Speed.toFixed(2);
+        ['price-ms','price-hsd','price-speed'].forEach(id => {
+          document.getElementById(id).classList.add('form-input--readonly');
+          document.getElementById(id).readOnly = true;
+        });
+      }
+      goStep(1);
+    })();
+  </script>
+</body>
+</html>

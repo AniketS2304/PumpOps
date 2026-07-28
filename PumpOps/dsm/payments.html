@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Payments — PumpOps DSM</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .payment-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .payment-entry:last-child { border-bottom: none; }
+    .payment-mode-label { font-weight: 700; min-width: 70px; }
+    .payment-subtype { font-size: 12px; color: var(--text-muted); }
+    .payment-amount { margin-left: auto; font-weight: 700; }
+    .payment-del { color: var(--red); font-size: 18px; cursor: pointer; padding: 0 4px; }
+    .add-payment-btn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: var(--brand);
+      padding: 8px 0; cursor: pointer; border: none; background: none;
+      font-family: var(--font);
+    }
+    .balance-bar {
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .balance-bar__fill {
+      height: 6px;
+      background: var(--green);
+      transition: width .3s ease;
+    }
+    .balance-bar__fill--warn { background: var(--amber); }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="closing-readings.html" class="top-bar__back">← Readings</a>
+      <div class="top-bar__title">Payment Entry</div>
+      <div class="top-bar__subtitle">MPD 01 · Amit Kumar</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- Expected Collection (AUTO) -->
+      <div style="padding:12px 16px 0;">
+        <div class="card" style="background:var(--surface-2);">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Expected Collection</div>
+              <div style="font-size:28px;font-weight:800;margin-top:2px;" id="expected-display">₹97,654.48</div>
+            </div>
+            <span class="field-badge field-badge--auto" style="font-size:10px;padding:3px 8px;">AUTO</span>
+          </div>
+          <div style="margin-top:8px;cursor:pointer;" onclick="showExpectedDrill()">
+            <span style="font-size:11px;color:var(--brand);font-weight:600;text-decoration:underline;">How is this calculated? →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balance Status -->
+      <div style="padding:10px 16px 0;">
+        <div id="balance-card" class="card card--compact">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--text-muted);">Entered so far</div>
+              <div style="font-size:18px;font-weight:800;" id="entered-display">₹75,400.00</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:12px;font-weight:600;color:var(--text-muted);">Remaining</div>
+              <div style="font-size:18px;font-weight:800;" id="remaining-display">₹22,254.48</div>
+            </div>
+          </div>
+          <div class="progress-bar balance-bar">
+            <div class="balance-bar__fill" id="balance-fill" style="width:77%"></div>
+          </div>
+          <div id="balance-status" class="alert alert--amber" style="margin-top:8px; padding:6px 10px;">
+            <span>⚠</span> <span style="font-size:12px;">₹22,254.48 remaining — add more payments</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Entries -->
+      <div class="section-label">Payment Entries</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact" id="payment-list">
+          <!-- Populated by JS -->
+        </div>
+        <button class="add-payment-btn" onclick="showAddPayment()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Payment Entry
+        </button>
+      </div>
+
+      <!-- Add Payment Form (hidden) -->
+      <div id="add-form" class="hidden" style="padding:0 16px;">
+        <div class="card">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--brand);">Add Payment</div>
+          <div class="form-group">
+            <label class="form-label">Payment Mode</label>
+            <select class="form-select" id="new-mode" onchange="updateSubTypes()">
+              <option value="Cash">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="Card">Card</option>
+              <option value="Loyalty">Loyalty Card</option>
+              <option value="Fleet">Fleet Card</option>
+              <option value="Credit">Credit Sale</option>
+            </select>
+          </div>
+          <div class="form-group" id="subtype-group">
+            <label class="form-label">Sub-type</label>
+            <select class="form-select" id="new-subtype">
+              <option>PhonePe</option>
+              <option>Paytm</option>
+              <option>Pinelab UPI</option>
+              <option>Bhim UPI</option>
+              <option>Others</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amount (₹)</label>
+            <input type="number" class="form-input" id="new-amount" placeholder="0.00" min="0" step="0.01" />
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn--ghost btn--sm" style="flex:1;" onclick="hideAddPayment()">Cancel</button>
+            <button class="btn btn--primary btn--sm" style="flex:1;" onclick="addPayment()">Add Entry</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expense Entries -->
+      <div class="section-label">Expense Entries</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact" id="expense-list">
+          <div style="padding:10px 0;text-align:center;color:var(--text-muted);font-size:13px;" id="expense-empty">No expenses added</div>
+        </div>
+        <button class="add-payment-btn" onclick="showAddExpense()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Expense
+        </button>
+        <!-- Expense Total -->
+        <div class="card card--compact" style="background:var(--red-bg);border-color:var(--red-border);margin-top:2px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:600;color:var(--red);">Total Expenses</span>
+            <div>
+              <span style="font-size:16px;font-weight:800;color:var(--red);" id="expense-total">₹0.00</span>
+              <span class="field-badge field-badge--auto" style="margin-left:4px;">AUTO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Expense Form (hidden) -->
+      <div id="expense-form" class="hidden" style="padding:0 16px;">
+        <div class="card">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--red);">Add Expense</div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select" id="exp-category">
+              <option>Tea / Refreshments</option>
+              <option>Cleaning Supplies</option>
+              <option>Stationary</option>
+              <option>Maintenance</option>
+              <option>Loading Allowance</option>
+              <option>Miscellaneous</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Note (optional)</label>
+            <input type="text" class="form-input" id="exp-note" placeholder="Short description…" style="font-size:13px;" />
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Amount (₹)</label>
+            <input type="number" class="form-input" id="exp-amount" placeholder="0" min="1" step="1" />
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn--ghost btn--sm" style="flex:1;" onclick="hideAddExpense()">Cancel</button>
+            <button class="btn btn--primary btn--sm" style="flex:1;" onclick="addExpense()">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:8px;">
+        <a href="closing-readings.html" class="btn btn--ghost">Back</a>
+        <a href="review-submit.html" class="btn btn--primary">Review &amp; Submit →</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const EXPECTED = 97654.48;
+    let payments = [
+      { id: 1, mode: 'Cash',    subType: null,          amount: 40000 },
+      { id: 2, mode: 'UPI',     subType: 'PhonePe',     amount: 12500 },
+      { id: 3, mode: 'UPI',     subType: 'Paytm',       amount:  4200 },
+      { id: 4, mode: 'UPI',     subType: 'Pinelab UPI', amount:  3400 },
+      { id: 5, mode: 'Card',    subType: 'Pinelab Card',amount:  8200 },
+      { id: 6, mode: 'Loyalty', subType: 'BPCL',        amount:  2100 },
+      { id: 7, mode: 'Credit',  subType: 'Shree Logistics', amount: 5000 },
+    ];
+    let nextId = 8;
+
+    function renderPayments() {
+      const list = document.getElementById('payment-list');
+      const modeColors = { Cash:'var(--green)', UPI:'var(--brand)', Card:'var(--amber)', Loyalty:'#8b5cf6', Fleet:'#0d9488', Credit:'var(--red)' };
+      list.innerHTML = payments.map(p => `
+        <div class="payment-entry">
+          <span class="payment-mode-label" style="color:${modeColors[p.mode]||'var(--text-primary)'};">${p.mode}</span>
+          <span class="payment-subtype">${p.subType || ''}</span>
+          <span class="payment-amount">${PO.formatINR(p.amount)}</span>
+          <span class="payment-del" onclick="removePayment(${p.id})">✕</span>
+        </div>
+      `).join('');
+      updateBalance();
+    }
+
+    function updateBalance() {
+      const total = PO.calculatePaymentTotal(payments);
+      const diff  = PO.calculatePaymentDifference(EXPECTED, total);
+      const pct   = Math.min(100, (total / EXPECTED) * 100);
+
+      document.getElementById('entered-display').textContent = PO.formatINR(total);
+      document.getElementById('remaining-display').textContent = diff >= 0 ? PO.formatINR(diff) : '₹0 (Over)';
+      document.getElementById('balance-fill').style.width = pct + '%';
+
+      const fill = document.getElementById('balance-fill');
+      fill.className = 'balance-bar__fill' + (pct < 100 ? ' balance-bar__fill--warn' : '');
+
+      const status = document.getElementById('balance-status');
+      if (Math.abs(diff) < 0.01) {
+        status.className = 'alert alert--green';
+        status.innerHTML = '<span>✓</span> <span style="font-size:12px;font-weight:700;">Collection balanced</span>';
+      } else if (diff > 0) {
+        status.className = 'alert alert--amber';
+        status.innerHTML = `<span>⚠</span> <span style="font-size:12px;">${PO.formatINR(diff)} remaining — add more payments</span>`;
+      } else {
+        status.className = 'alert alert--red';
+        status.innerHTML = `<span>⚠</span> <span style="font-size:12px;">Over by ${PO.formatINR(Math.abs(diff))} — verify entries</span>`;
+      }
+    }
+
+    function removePayment(id) { payments = payments.filter(p => p.id !== id); renderPayments(); }
+
+    function showAddPayment() {
+      document.getElementById('add-form').classList.remove('hidden');
+      document.getElementById('new-amount').focus();
+    }
+    function hideAddPayment() { document.getElementById('add-form').classList.add('hidden'); }
+
+    function updateSubTypes() {
+      const mode = document.getElementById('new-mode').value;
+      const subTypes = {
+        UPI:     ['PhonePe','Paytm','Pinelab UPI','Bhim UPI','Others'],
+        Card:    ['Pinelab Card','ICICI','SBI','Others'],
+        Loyalty: ['BPCL SmartFleet','HPCL DriveTrack','ALP','SBI Redeem'],
+        Fleet:   ['FleetCard','AGS'],
+        Cash:    [], Credit: [], 
+      };
+      const sg = document.getElementById('subtype-group');
+      const opts = subTypes[mode] || [];
+      sg.style.display = opts.length ? '' : 'none';
+      document.getElementById('new-subtype').innerHTML = opts.map(o => `<option>${o}</option>`).join('');
+    }
+    updateSubTypes();
+
+    function addPayment() {
+      const mode   = document.getElementById('new-mode').value;
+      const sub    = document.getElementById('new-subtype').value;
+      const amt    = parseFloat(document.getElementById('new-amount').value);
+      if (!amt || amt <= 0) { APP.showToast('Enter a valid amount', 'error'); return; }
+      payments.push({ id: nextId++, mode, subType: sub || null, amount: amt });
+      renderPayments();
+      hideAddPayment();
+      document.getElementById('new-amount').value = '';
+      APP.showToast('Payment entry added', 'success');
+    }
+
+    function showExpectedDrill() {
+      APP.showCalcModal('Expected Collection', [
+        { label: 'N01 MS Sale Amount', value: '₹37,594.48' },
+        { label: 'N02 HSD Sale Amount', value: '₹60,060.00' },
+        { label: 'Total Expected', value: PO.formatINR(EXPECTED) },
+      ]);
+    }
+
+    // ─── Expenses ─────────────────────────────
+    let expenses = APP.getExpenses();
+    let expNextId = expenses.length ? Math.max(...expenses.map(e => e.id || 0)) + 1 : 1;
+
+    function showAddExpense() { document.getElementById('expense-form').classList.remove('hidden'); }
+    function hideAddExpense() { document.getElementById('expense-form').classList.add('hidden'); }
+
+    function addExpense() {
+      const cat = document.getElementById('exp-category').value;
+      const note = document.getElementById('exp-note').value.trim();
+      const amt = parseFloat(document.getElementById('exp-amount').value);
+      if (!amt || amt <= 0) { APP.showToast('Enter a valid amount', 'error'); return; }
+      expenses.push({ id: expNextId++, category: cat, note, amount: amt });
+      APP.saveExpenses(expenses);
+      renderExpenses();
+      hideAddExpense();
+      document.getElementById('exp-amount').value = '';
+      document.getElementById('exp-note').value = '';
+      APP.showToast('Expense added', 'success');
+    }
+
+    function removeExpense(id) {
+      expenses = expenses.filter(e => e.id !== id);
+      APP.saveExpenses(expenses);
+      renderExpenses();
+    }
+
+    function renderExpenses() {
+      const list = document.getElementById('expense-list');
+      const empty = document.getElementById('expense-empty');
+      if (!expenses.length) {
+        list.innerHTML = '';
+        list.appendChild(empty);
+        empty.style.display = '';
+        document.getElementById('expense-total').textContent = '₹0.00';
+        return;
+      }
+      list.innerHTML = expenses.map(e => `
+        <div class="payment-entry">
+          <span class="payment-mode-label" style="color:var(--red);">${e.category}</span>
+          <span class="payment-subtype">${e.note || ''}</span>
+          <span class="payment-amount" style="color:var(--red);">${PO.formatINR(e.amount)}</span>
+          <span class="payment-del" onclick="removeExpense(${e.id})">✕</span>
+        </div>`).join('');
+      const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+      document.getElementById('expense-total').textContent = PO.formatINR(total);
+    }
+
+    renderExpenses();
+    renderPayments();
+  </script>
+</body>
+</html>

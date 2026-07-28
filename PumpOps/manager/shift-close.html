@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Close Shift — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__title">Close Shift</div>
+      <div class="top-bar__subtitle">Morning Shift · 06:00 – 14:00</div>
+    </header>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step-item step-item--done"><div class="step-dot">✓</div><span>Readings</span></div>
+      <div class="step-item step-item--done"><div class="step-dot">✓</div><span>Verify</span></div>
+      <div class="step-item step-item--done"><div class="step-dot">✓</div><span>Adjust</span></div>
+      <div class="step-item step-item--done"><div class="step-dot">✓</div><span>Cash</span></div>
+      <div class="step-item step-item--done"><div class="step-dot">✓</div><span>Settle</span></div>
+      <div class="step-item step-item--active"><div class="step-dot">6</div><span>Review</span></div>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- Status Check -->
+      <div class="section-label">Checklist Status</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div class="checklist-item">
+            <span class="checklist-item__label">Nozzle readings</span>
+            <span class="checklist-item__status text-green">12/12 ✓</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-item__label">DSM verification</span>
+            <span class="checklist-item__status text-green">6/6 verified ✓</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-item__label">Adjustments reviewed</span>
+            <span class="checklist-item__status text-green">✓</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-item__label">Closing tank DIP</span>
+            <span class="checklist-item__status text-green">4/4 ✓</span>
+          </div>
+          <div class="checklist-item">
+            <span class="checklist-item__label">Cash counted</span>
+            <span class="checklist-item__status text-green">✓</span>
+          </div>
+          <div class="checklist-item" style="border-bottom:none;">
+            <span class="checklist-item__label">Settlement</span>
+            <span class="checklist-item__status" style="color:var(--amber);">⚠ −₹150 diff</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sales Summary -->
+      <div class="section-label">Sales Summary</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div class="row">
+            <div><span class="badge badge--green" style="margin-right:6px;">MS</span></div>
+            <div style="text-align:right;"><div class="fw-700">1,573.00 L</div><div class="text-xs text-muted">₹1,64,796.56</div></div>
+          </div>
+          <div class="row">
+            <div><span class="badge badge--blue" style="margin-right:6px;">HSD</span></div>
+            <div style="text-align:right;"><div class="fw-700">1,904.00 L</div><div class="text-xs text-muted">₹1,75,929.60</div></div>
+          </div>
+          <div class="row" style="border-bottom:none;">
+            <div><span class="badge badge--amber" style="margin-right:6px;">Speed</span></div>
+            <div style="text-align:right;"><div class="fw-700">320.00 L</div><div class="text-xs text-muted">₹36,320.00</div></div>
+          </div>
+        </div>
+        <div class="card card--compact" style="background:var(--surface-2);margin-top:6px;">
+          <div class="row" style="border-bottom:none;">
+            <span class="row__label fw-700">TOTAL SALES</span>
+            <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:20px;font-weight:800;color:var(--brand);">₹3,77,046.16</span><span class="field-badge field-badge--auto">AUTO</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collections -->
+      <div class="section-label">Collections</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div class="row"><span class="row__label">Cash</span><span class="row__value">₹1,82,000.00</span></div>
+          <div class="row"><span class="row__label">UPI</span><span class="row__value">₹1,21,500.00</span></div>
+          <div class="row"><span class="row__label">Card</span><span class="row__value">₹68,200.00</span></div>
+          <div class="row"><span class="row__label">Credit</span><span class="row__value">₹38,650.00</span></div>
+          <div class="row"><span class="row__label">Loyalty</span><span class="row__value">₹8,300.00</span></div>
+          <div class="row" style="border-top:2px solid var(--border);border-bottom:none;padding-top:8px;margin-top:4px;">
+            <span class="fw-700">TOTAL COLLECTIONS</span>
+            <div style="display:flex;align-items:center;gap:6px;"><span class="fw-700 text-green" style="font-size:16px;">₹4,18,650.00</span><span class="field-badge field-badge--auto">AUTO</span></div>
+          </div>
+        </div>
+        <div class="alert alert--green" style="margin-top:8px;">
+          <span class="alert__icon">✓</span><span style="font-size:13px;font-weight:700;">Collections BALANCED</span>
+        </div>
+      </div>
+
+      <!-- Adjustments -->
+      <div class="section-label">Adjustments</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div class="row"><span class="row__label">Credit Sales</span><span class="row__value">₹38,650.00</span></div>
+          <div class="row"><span class="row__label">Expenses</span><span class="row__value text-red">−₹950.00</span></div>
+          <div class="row"><span class="row__label">Staff Short</span><span class="row__value text-red">−₹250.00</span></div>
+          <div class="row" style="border-bottom:none;"><span class="row__label">Sales Promo</span><span class="row__value text-green">+₹100.00</span></div>
+        </div>
+      </div>
+
+      <!-- Cash Check -->
+      <div class="section-label">Cash Verification</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div class="row"><span class="row__label">Expected</span><div style="display:flex;align-items:center;gap:6px;"><span class="row__value">₹1,81,050</span><span class="field-badge field-badge--auto">AUTO</span></div></div>
+          <div class="row"><span class="row__label">Counted</span><span class="row__value">₹1,81,000</span></div>
+          <div class="row" style="border-bottom:none;"><span class="row__label fw-700">Variance</span><span class="row__value text-amber fw-700">−₹50</span></div>
+        </div>
+        <div class="alert alert--amber" style="margin-top:6px;">
+          <span class="alert__icon">⚠</span><span style="font-size:13px;">Small cash shortage — remark recorded.</span>
+        </div>
+      </div>
+
+      <!-- Tank Variances -->
+      <div class="section-label">Tank Variances</div>
+      <div style="padding:0 16px;">
+        <div class="card card--compact">
+          <div class="row"><span class="row__label">MS T-1</span><span class="row__value text-amber">−20 L</span></div>
+          <div class="row"><span class="row__label">MS T-2</span><span class="row__value text-green">+2 L</span></div>
+          <div class="row"><span class="row__label">HSD T-3</span><span class="row__value text-amber">−3 L</span></div>
+          <div class="row" style="border-bottom:none;"><span class="row__label">Speed T-4</span><span class="row__value text-green">0 L ✓</span></div>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <div style="padding:16px;">
+        <div class="alert alert--amber" style="margin-bottom:12px;">
+          <span class="alert__icon">⚠</span>
+          <span style="font-size:13px;">Settlement difference of −₹150 exists. Closing will note this in audit log.</span>
+        </div>
+        <button class="btn btn--success" onclick="closeShift()">⛽ CLOSE SHIFT</button>
+        <a href="home.html" class="btn btn--ghost" style="margin-top:8px;">Back</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    function closeShift() {
+      APP.showConfirmModal({
+        title: 'Close Morning Shift?',
+        body: 'This action is irreversible. The shift will be locked. All figures will be used in the Daily Sales Report.',
+        confirmLabel: 'CLOSE SHIFT',
+        confirmClass: 'btn--danger',
+        onConfirm: () => {
+          APP.showToast('Morning Shift closed successfully', 'success');
+          setTimeout(() => window.location.href = 'home.html', 1200);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

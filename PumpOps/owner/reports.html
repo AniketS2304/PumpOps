@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Reports — PumpOps Owner</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="dashboard.html" class="top-bar__back">← Dashboard</a>
+      <div class="top-bar__title">Reports</div>
+      <div class="top-bar__subtitle">Analytics &amp; Historical Data</div>
+    </header>
+
+    <div class="tab-bar" id="report-tabs">
+      <div class="tab-item tab-item--active" data-target="daily">Daily</div>
+      <div class="tab-item" data-target="grade">Grade Mix</div>
+      <div class="tab-item" data-target="dsm">DSM</div>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- DAILY TAB -->
+      <div data-tab-panel="daily">
+        <div class="section-label">Last 7 Days</div>
+        <div style="padding:0 16px; display:flex;flex-direction:column;gap:6px;" id="daily-list"></div>
+      </div>
+
+      <!-- GRADE MIX TAB -->
+      <div data-tab-panel="grade" class="hidden">
+        <div class="section-label">Grade Sales Trend — Jul 2026</div>
+        <div style="padding:0 16px;">
+          <div class="card">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Daily average breakdowns</div>
+            <div class="row">
+              <div><span class="badge badge--green" style="margin-right:6px;">MS</span>Petrol</div>
+              <div style="text-align:right;">
+                <div class="fw-700">3,146 L / day avg</div>
+                <div style="font-size:12px;color:var(--text-muted);">↑ 2.3% vs prev month</div>
+              </div>
+            </div>
+            <div class="row">
+              <div><span class="badge badge--blue" style="margin-right:6px;">HSD</span>Diesel</div>
+              <div style="text-align:right;">
+                <div class="fw-700">3,356 L / day avg</div>
+                <div style="font-size:12px;color:var(--text-muted);">↓ 1.1% vs prev month</div>
+              </div>
+            </div>
+            <div class="row" style="border-bottom:none;">
+              <div><span class="badge badge--amber" style="margin-right:6px;">Speed</span>Premium</div>
+              <div style="text-align:right;">
+                <div class="fw-700">340 L / day avg</div>
+                <div style="font-size:12px;color:var(--green);font-weight:700;">↑ 8.4% vs prev month</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grade Mix Pie visual -->
+        <div class="section-label">Grade Mix (Volume)</div>
+        <div style="padding:0 16px 16px;">
+          <div class="card card--compact">
+            <div style="display:flex;height:16px;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+              <div style="background:var(--green);width:46%;"></div>
+              <div style="background:var(--blue);width:49%;"></div>
+              <div style="background:var(--amber);width:5%;"></div>
+            </div>
+            <div style="display:flex;gap:16px;font-size:12px;">
+              <div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;"></span>MS 46%</div>
+              <div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block;"></span>HSD 49%</div>
+              <div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;"></span>Speed 5%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DSM TAB -->
+      <div data-tab-panel="dsm" class="hidden">
+        <div class="section-label">DSM Performance — Jul 2026</div>
+        <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px;" id="dsm-perf"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.initTabs('#report-tabs');
+
+    // Daily data
+    const days = [
+      { date: '27 Jul', day: 'Mon', sales: 862450, litres: 6842 },
+      { date: '26 Jul', day: 'Sun', sales: 823200, litres: 6540 },
+      { date: '25 Jul', day: 'Sat', sales: 894300, litres: 7150 },
+      { date: '24 Jul', day: 'Fri', sales: 778900, litres: 6210 },
+      { date: '23 Jul', day: 'Thu', sales: 810400, litres: 6480 },
+      { date: '22 Jul', day: 'Wed', sales: 741200, litres: 5920 },
+      { date: '21 Jul', day: 'Tue', sales: 822800, litres: 6640 },
+    ];
+    const maxSale = Math.max(...days.map(d => d.sales));
+    document.getElementById('daily-list').innerHTML = days.map((d, i) => `
+      <div class="card card--compact ${i===0?'':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div>
+            <div style="font-size:13px;font-weight:700;">${d.date} ${i===0?'<span class="badge badge--blue" style="margin-left:4px;font-size:9px;">TODAY</span>':''}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${d.day}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:15px;font-weight:800;color:${i===0?'var(--brand)':'var(--text-primary)'};">${PO.formatINR(d.sales)}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${d.litres.toLocaleString('en-IN')} L</div>
+          </div>
+        </div>
+        <div style="height:6px;border-radius:4px;background:var(--border);overflow:hidden;">
+          <div style="height:100%;border-radius:4px;background:${i===0?'var(--brand)':'var(--text-muted)'};width:${Math.round(d.sales/maxSale*100)}%;transition:width .3s;"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // DSM performance
+    document.getElementById('dsm-perf').innerHTML = MOCK.dsms.map((d, i) => {
+      const litres = [7200, 8400, 6800, 7100, 8800, 7500][i] || 7000;
+      const score = PO.calculatePerformanceScore(litres, 0, 0, d.baseSalary);
+      const shortages = [0, 0, -250, 0, 0, -400][i];
+      return `
+        <div class="card card--compact">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:700;">${d.name}</div>
+            <span class="badge ${score>=80?'badge--green':score>=60?'badge--amber':'badge--red'}">${score} pts</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:var(--text-muted);">
+            <span>Litres: <strong style="color:var(--text-primary);">${litres.toLocaleString('en-IN')}</strong></span>
+            <span>Shortages: <strong style="color:${shortages<0?'var(--red)':'var(--green)'};">${PO.formatINR(Math.abs(shortages))}</strong></span>
+          </div>
+          <div style="margin-top:8px;height:6px;border-radius:4px;background:var(--border);overflow:hidden;">
+            <div style="height:100%;border-radius:4px;background:${score>=80?'var(--green)':score>=60?'var(--amber)':'var(--red)'};width:${score}%;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  </script>
+</body>
+</html>

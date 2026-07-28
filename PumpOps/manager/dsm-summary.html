@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>DSM Summary — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .summary-card {
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 8px;
+      cursor: pointer; transition: box-shadow .15s;
+    }
+    .summary-card:hover { box-shadow: var(--shadow-md); }
+    .summary-card__header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .grade-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 3px 0; font-size: 12px;
+    }
+    .grade-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+    .totals-bar {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px; padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .totals-bar__item { text-align: center; }
+    .totals-bar__val { font-size: 16px; font-weight: 800; }
+    .totals-bar__lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin-top: 2px; }
+    .filter-row { display: flex; gap: 6px; padding: 10px 16px 4px; flex-wrap: wrap; }
+    .filter-chip {
+      padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--border); cursor: pointer;
+      color: var(--text-secondary); background: var(--surface);
+      transition: all .15s;
+    }
+    .filter-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Manager Home</a>
+      <div class="top-bar__title">DSM-wise Summary</div>
+      <div class="top-bar__subtitle">Cash · Short · Expenses · Fuel by Grade</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- Shift filter -->
+      <div class="filter-row">
+        <span class="filter-chip active" onclick="filterShift('all', this)">All Shifts</span>
+        <span class="filter-chip" onclick="filterShift('Morning', this)">Morning</span>
+        <span class="filter-chip" onclick="filterShift('Evening', this)">Evening</span>
+      </div>
+
+      <!-- Aggregate Totals -->
+      <div class="totals-bar" id="agg-totals">
+        <div class="totals-bar__item">
+          <div class="totals-bar__val" id="agg-sale">—</div>
+          <div class="totals-bar__lbl">Total Sale</div>
+        </div>
+        <div class="totals-bar__item" style="display:flex;flex-direction:column;justify-content:center;font-size:11px;line-height:1.3;text-align:left;padding-left:14px;">
+          <div style="display:flex;justify-content:space-between;width:100%;"><span style="color:#16a34a;font-weight:700;">Petrol MS:</span><span style="font-weight:800;margin-left:8px;" id="agg-litres-ms">—</span></div>
+          <div style="display:flex;justify-content:space-between;width:100%;"><span style="color:#d97706;font-weight:700;">Speed:</span><span style="font-weight:800;margin-left:8px;" id="agg-litres-speed">—</span></div>
+          <div style="display:flex;justify-content:space-between;width:100%;"><span style="color:#2563eb;font-weight:700;">Diesel HSD:</span><span style="font-weight:800;margin-left:8px;" id="agg-litres-hsd">—</span></div>
+        </div>
+        <div class="totals-bar__item">
+          <div class="totals-bar__val" style="color:var(--red);" id="agg-short">—</div>
+          <div class="totals-bar__lbl">Shortages</div>
+        </div>
+      </div>
+
+      <!-- DSM Cards -->
+      <div class="section-label">DSM Breakdown</div>
+      <div style="padding:0 16px 16px;" id="dsm-list"></div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const dsmData = MOCK.dsms.map(d => {
+      // Compute grade-wise litres from assigned nozzles
+      const mpd = MOCK.mpds.find(m => m.id === d.mpd);
+      const nozzles = mpd ? mpd.nozzles.filter(n => d.nozzles.includes(n.id)) : [];
+      const gradeMap = {};
+      nozzles.forEach(n => {
+        const gross = n.closing - n.opening;
+        const net = gross - n.testing;
+        const rate = MOCK.grades.find(g => g.code === n.grade)?.rate || 0;
+        if (!gradeMap[n.grade]) gradeMap[n.grade] = { litres: 0, amount: 0 };
+        gradeMap[n.grade].litres += net;
+        gradeMap[n.grade].amount += net * rate;
+      });
+      const totalLitres = Object.values(gradeMap).reduce((s, g) => s + g.litres, 0);
+      const totalSale = Object.values(gradeMap).reduce((s, g) => s + g.amount, 0);
+      const expenses = MOCK.adjustments.filter(a => a.dsm === d.id && a.type === 'expense');
+      const expTotal = expenses.reduce((s, e) => s + e.amount, 0);
+      const short = Math.abs(d.payDiff || 0);
+      const hrs = d.inTime && d.outTime ? APP.calcDuration(d.inTime, d.outTime) : (d.inTime ? 'Active' : '—');
+      return { ...d, gradeMap, totalLitres, totalSale, expTotal, short, hrs, shift: d.inTime < '14:00' ? 'Morning' : 'Evening' };
+    });
+
+    let currentFilter = 'all';
+
+    function filterShift(shift, el) {
+      currentFilter = shift;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderList();
+    }
+
+    function renderList() {
+      const filtered = currentFilter === 'all' ? dsmData : dsmData.filter(d => d.shift === currentFilter);
+      const container = document.getElementById('dsm-list');
+      // Aggregates
+      const totSale = filtered.reduce((s, d) => s + d.totalSale, 0);
+      const totShort = filtered.reduce((s, d) => s + d.short, 0);
+      
+      let totMS = 0, totSpeed = 0, totHSD = 0;
+      filtered.forEach(d => {
+        totMS += d.gradeMap.MS ? d.gradeMap.MS.litres : 0;
+        totSpeed += d.gradeMap.Speed ? d.gradeMap.Speed.litres : 0;
+        totHSD += d.gradeMap.HSD ? d.gradeMap.HSD.litres : 0;
+      });
+
+      document.getElementById('agg-sale').textContent = PO.formatINRCompact(totSale);
+      document.getElementById('agg-litres-ms').textContent = totMS.toFixed(0) + ' L';
+      document.getElementById('agg-litres-speed').textContent = totSpeed.toFixed(0) + ' L';
+      document.getElementById('agg-litres-hsd').textContent = totHSD.toFixed(0) + ' L';
+      document.getElementById('agg-short').textContent = totShort > 0 ? '−' + PO.formatINR(totShort) : '₹0';
+
+      const statusColor = { SUBMITTED: 'badge--amber', ACTIVE: 'badge--blue', VERIFIED: 'badge--green' };
+      const gradeStyles = { MS: '#16a34a', HSD: '#2563eb', Speed: '#d97706' };
+      const gradeLabel = { MS: '⛽ Petrol', HSD: '🛢 Diesel', Speed: '🔥 Speed' };
+
+      container.innerHTML = filtered.map(d => `
+        <div class="summary-card" onclick="window.location.href='dsm-verification.html'">
+          <div class="summary-card__header">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:38px;height:38px;border-radius:50%;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--brand);">${d.initials}</div>
+              <div>
+                <div style="font-weight:700;font-size:14px;">${d.name}</div>
+                <div style="font-size:11px;color:var(--text-muted);">${d.mpd} · ${d.bays.map(b=>'Bay '+b).join(' & ')} · ${d.hrs}</div>
+              </div>
+            </div>
+            <span class="badge ${statusColor[d.status]||'badge--slate'}">${d.status}</span>
+          </div>
+          <!-- Grade-wise litres -->
+          <div style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px;">
+            ${Object.entries(d.gradeMap).map(([g, val]) => `
+              <div class="grade-row">
+                <span><span class="grade-dot" style="background:${gradeStyles[g]||'#64748b'};"></span>${gradeLabel[g]||g}</span>
+                <div style="text-align:right;">
+                  <span style="font-weight:700;">${val.litres.toFixed(2)} L</span>
+                  <span style="color:var(--text-muted);margin-left:6px;">${PO.formatINR(val.amount)}</span>
+                </div>
+              </div>`).join('')}
+          </div>
+          <!-- Cash / Short / Expenses -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;">
+            <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:6px;padding:5px 4px;">
+              <div style="font-size:12px;font-weight:800;color:var(--green);">${PO.formatINRCompact(d.totalSale)}</div>
+              <div style="font-size:9px;color:var(--text-muted);font-weight:600;text-transform:uppercase;">Total Sale</div>
+            </div>
+            <div style="background:${d.short ? 'var(--red-bg)' : 'var(--surface-2)'};border:1px solid ${d.short ? 'var(--red-border)' : 'var(--border)'};border-radius:6px;padding:5px 4px;">
+              <div style="font-size:12px;font-weight:800;color:${d.short ? 'var(--red)' : 'var(--text-muted)'};">${d.short ? '−'+PO.formatINR(d.short) : '₹0'}</div>
+              <div style="font-size:9px;color:var(--text-muted);font-weight:600;text-transform:uppercase;">Shortage</div>
+            </div>
+            <div style="background:${d.expTotal ? 'var(--amber-bg)' : 'var(--surface-2)'};border:1px solid ${d.expTotal ? 'var(--amber-border)' : 'var(--border)'};border-radius:6px;padding:5px 4px;">
+              <div style="font-size:12px;font-weight:800;color:${d.expTotal ? 'var(--amber)' : 'var(--text-muted)'};">${d.expTotal ? PO.formatINR(d.expTotal) : '₹0'}</div>
+              <div style="font-size:9px;color:var(--text-muted);font-weight:600;text-transform:uppercase;">Expenses</div>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    renderList();
+  </script>
+</body>
+</html>

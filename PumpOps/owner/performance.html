@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>DSM Performance — PumpOps Owner</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="dashboard.html" class="top-bar__back">← Dashboard</a>
+      <div class="top-bar__title">DSM Performance</div>
+      <div class="top-bar__subtitle">Performance Scoring &amp; Rankings · July 2026</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+      <div class="alert alert--blue" style="margin:12px 16px 0;">
+        <span class="alert__icon">ℹ</span>
+        <span style="font-size:13px;">Scores are auto-calculated from Litres sold vs Target (30%), Cash Variance (25%), Attendance (15%), Punctuality (10%), complaints and upsells (20%).</span>
+      </div>
+
+      <div style="padding:12px 16px; display:flex; flex-direction:column; gap:10px;" id="perf-list"></div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const dsms = MOCK.dsms;
+    const list = document.getElementById('perf-list');
+
+    // Render DSMs with calculation scores
+    list.innerHTML = dsms.map((d, i) => {
+      const litres = [7200, 8400, 6800, 7100, 8800, 7500][i] || 7000;
+      const target = 7500;
+      const shortages = d.payDiff || 0;
+      const complaints = i === 2 ? 1 : 0;
+      const score = PO.calculatePerformanceScore(litres, shortages, complaints, d.baseSalary);
+      const scoreClass = score >= 80 ? 'badge--green' : score >= 60 ? 'badge--amber' : 'badge--red';
+
+      return `
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div>
+              <div style="font-size:15px; font-weight:800;">${d.name}</div>
+              <div style="font-size:11px; color:var(--text-muted);">Assigned to ${d.mpd}</div>
+            </div>
+            <span class="badge ${scoreClass}" style="font-size:12px; padding:4px 8px;">${score} pts</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center; margin-bottom:10px;">
+            <div>
+              <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Volume</div>
+              <div style="font-size:14px; font-weight:700; margin-top:2px;">${litres.toLocaleString('en-IN')} L</div>
+            </div>
+            <div>
+              <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Target</div>
+              <div style="font-size:14px; font-weight:700; margin-top:2px;">${target.toLocaleString('en-IN')} L</div>
+            </div>
+            <div>
+              <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Shortage</div>
+              <div style="font-size:14px; font-weight:700; color:${shortages<0?'var(--red)':'var(--green)'}; margin-top:2px;">${PO.formatINR(Math.abs(shortages))}</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px;">
+              <span style="color:var(--text-muted);">Volume Target Met</span>
+              <span style="font-weight:700;">${Math.round(litres/target*100)}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar__fill ${litres>=target?'progress-bar__fill--green':'progress-bar__fill--amber'}" style="width:${Math.min(100, Math.round(litres/target*100))}%"></div>
+            </div>
+          </div>
+
+          <button class="btn btn--ghost btn--sm" style="font-size:11px;" onclick="showDrill('${d.name}', ${litres}, ${shortages}, ${complaints})">View Score Breakdown →</button>
+        </div>
+      `;
+    }).join('');
+
+    function showDrill(name, litres, shorts, complaints) {
+      const target = 7500;
+      const score = PO.calculatePerformanceScore(litres, shorts, complaints, 15000);
+      APP.showCalcModal('Performance Score — ' + name, [
+        { label: 'Baseline Score', value: '85 pts' },
+        { label: 'Litres Achieved', value: litres.toLocaleString() + ' L' },
+        { label: 'Target', value: target.toLocaleString() + ' L' },
+        { label: 'Litres Adjustment', value: litres >= target ? '+10 pts (Target met)' : litres >= 7000 ? '+5 pts' : '-10 pts' },
+        { label: 'Shortage Penalty', value: shorts < 0 ? '-' + Math.min(20, Math.round(Math.abs(shorts) / 50)) + ' pts' : '0 pts' },
+        { label: 'Complaints Penalty', value: complaints > 0 ? '-' + (complaints * 10) + ' pts' : '0 pts' },
+        { label: '= Net Score', value: score + ' / 100' }
+      ]);
+    }
+  </script>
+</body>
+</html>

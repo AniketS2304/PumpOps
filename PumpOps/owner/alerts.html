@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Alerts — PumpOps Owner</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="dashboard.html" class="top-bar__back">← Dashboard</a>
+      <div class="top-bar__title">Alert Center</div>
+      <div class="top-bar__subtitle">Real-time Operations &amp; Risk Monitoring</div>
+    </header>
+
+    <div class="filter-bar">
+      <span class="filter-pill filter-pill--active" onclick="filterAlerts('all')">All (5)</span>
+      <span class="filter-pill" onclick="filterAlerts('red')">Urgent (2)</span>
+      <span class="filter-pill" onclick="filterAlerts('amber')">Warnings (3)</span>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+      <div style="padding:12px 16px; display:flex; flex-direction:column; gap:10px;" id="alerts-list"></div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const alerts = MOCK.alerts;
+
+    function renderAlerts(filter = 'all') {
+      const container = document.getElementById('alerts-list');
+      const filtered = alerts.filter(a => filter === 'all' || a.severity === filter);
+
+      container.innerHTML = filtered.map(a => {
+        const severityClass = a.severity === 'red' ? 'card--alert-red' : 'card--alert-amber';
+        const badgeClass = a.severity === 'red' ? 'badge--red' : 'badge--amber';
+
+        return `
+          <div class="card card--compact ${severityClass}">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <span class="badge ${badgeClass}">${a.severity.toUpperCase()}</span>
+              <span style="font-size:11px; color:var(--text-muted); font-weight:600;">${a.time}</span>
+            </div>
+            <div style="font-size:14px; font-weight:700;">${a.message}</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Module: ${a.module}</div>
+            <div style="margin-top:10px; display:flex; gap:6px; justify-content:flex-end;">
+              <button class="btn btn--sm btn--ghost btn--inline" onclick="dismissAlert(${a.id})">Dismiss</button>
+              <button class="btn btn--sm btn--primary btn--inline" onclick="investigate('${a.module}')">Investigate</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function dismissAlert(id) {
+      APP.showToast('Alert dismissed', 'info');
+    }
+
+    function investigate(module) {
+      const routes = {
+        'Inventory': '../inventory/home.html',
+        'Credit': 'credit.html',
+        'Cash': 'dsr.html',
+        'Settlement': 'dsr.html'
+      };
+      window.location.href = routes[module] || 'dashboard.html';
+    }
+
+    function filterAlerts(type) {
+      document.querySelectorAll('.filter-pill').forEach(p => {
+        p.classList.remove('filter-pill--active');
+        if (p.textContent.toLowerCase().includes(type)) p.classList.add('filter-pill--active');
+        if (type === 'all' && p.textContent.includes('All')) p.classList.add('filter-pill--active');
+      });
+      renderAlerts(type);
+    }
+
+    renderAlerts();
+  </script>
+</body>
+</html>

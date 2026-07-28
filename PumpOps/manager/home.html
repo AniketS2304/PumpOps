@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Manager Home — PumpOps</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <!-- Header -->
+    <header class="top-bar">
+      <div class="top-bar__meta">
+        <div>
+          <div class="top-bar__station">SPS Bharat Petroleum · Pune</div>
+          <div class="top-bar__title">Good afternoon, Rajesh</div>
+          <div class="top-bar__subtitle">Evening Shift · 14:00 – 22:00</div>
+        </div>
+        <span class="top-bar__role">Shift Manager</span>
+      </div>
+      <!-- KPI Row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;">
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:8px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;">₹4.19L</div>
+          <div style="font-size:9px;opacity:.75;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Today Sales</div>
+        </div>
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;justify-content:center;font-size:9px;line-height:1.25;">
+          <div style="display:flex;justify-content:space-between;font-weight:700;color:#cbfbda;"><span>Petrol:</span><span>1,573 L</span></div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;color:#fef3c7;"><span>Speed:</span><span>320 L</span></div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;color:#dbeafe;"><span>Diesel:</span><span>1,931 L</span></div>
+        </div>
+        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:8px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;color:#fbbf24;">2</div>
+          <div style="font-size:9px;opacity:.75;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Alerts</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Shift Status -->
+      <div style="padding:12px 16px 0;">
+        <div class="card" style="border-left:3px solid var(--blue);">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:700;">Evening Shift</div>
+              <div style="font-size:12px;color:var(--text-muted);">14:00 – 22:00 · 6 DSMs on duty</div>
+            </div>
+            <span class="badge badge--blue">ACTIVE</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <a href="shift-close.html" class="btn btn--primary btn--sm" style="flex:1;">Close Shift</a>
+            <a href="live-shift.html" class="btn btn--secondary btn--sm" style="flex:1;">Live Monitor</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- DSM Status -->
+      <div class="section-label">DSM Status</div>
+      <div style="padding:0 16px; display:flex; flex-direction:column; gap:8px;">
+
+        <!-- Submitted — needs verification -->
+        <div class="dsm-card" style="border-color:var(--amber-border);border-width:1.5px;">
+          <div class="dsm-card__avatar">AK</div>
+          <div class="dsm-card__info">
+            <div class="dsm-card__name">Amit Kumar</div>
+            <div class="dsm-card__meta">MPD 01 · N01 MS · N02 HSD</div>
+            <div style="margin-top:4px;">
+              <span class="badge badge--amber">SUBMITTED</span>
+              <span style="font-size:11px;color:var(--amber);font-weight:600;margin-left:6px;">Needs verification</span>
+            </div>
+          </div>
+          <div class="dsm-card__action">
+            <a href="dsm-verification.html" class="btn btn--sm btn--primary" style="padding:6px 12px;font-size:11px;">Verify</a>
+          </div>
+        </div>
+
+        <!-- Active -->
+        <div class="dsm-card">
+          <div class="dsm-card__avatar">SP</div>
+          <div class="dsm-card__info">
+            <div class="dsm-card__name">Sachin Patil</div>
+            <div class="dsm-card__meta">MPD 02 · N03 HSD · N04 MS</div>
+            <div style="margin-top:4px;"><span class="badge badge--blue">OPERATING</span></div>
+          </div>
+          <div class="dsm-card__action">
+            <a href="live-shift.html" class="btn btn--sm btn--ghost" style="font-size:11px;">View</a>
+          </div>
+        </div>
+
+        <!-- Verified -->
+        <div class="dsm-card" style="border-color:var(--green-border);border-width:1.5px;">
+          <div class="dsm-card__avatar" style="background:var(--green-bg);color:var(--green);">OS</div>
+          <div class="dsm-card__info">
+            <div class="dsm-card__name">Omkar Shinde</div>
+            <div class="dsm-card__meta">MPD 03 · N05 Speed · N06 MS</div>
+            <div style="margin-top:4px;">
+              <span class="badge badge--green">VERIFIED</span>
+              <span style="font-size:11px;color:var(--red);font-weight:600;margin-left:6px;">Short −₹250</span>
+            </div>
+          </div>
+          <div class="dsm-card__action">
+            <a href="dsm-verification.html" class="btn btn--sm btn--ghost" style="font-size:11px;">View</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attention Required -->
+      <div class="section-label">Attention Required</div>
+      <div style="padding:0 16px; display:flex; flex-direction:column; gap:6px;">
+        <div class="card--alert-amber card card--compact">
+          <div style="font-size:13px;font-weight:700;">₹400 DSM payment difference</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Amit Kumar · MPD 01 — needs verification</div>
+        </div>
+        <div class="card--alert-amber card card--compact">
+          <div style="font-size:13px;font-weight:700;">MS T-1 DIP variance −8 L</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Morning shift — verify closing DIP</div>
+        </div>
+        <div class="card--alert-blue card card--compact">
+          <div style="font-size:13px;font-weight:700;">1 pending credit sale</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Shree Logistics — 45 L HSD awaiting</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-label">Quick Actions</div>
+      <div style="padding:0 16px 16px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <a href="dsm-submissions.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">✓</div>
+          <div style="font-size:12px;font-weight:700;">Verify DSM</div>
+        </a>
+        <a href="dsm-summary.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">📋</div>
+          <div style="font-size:12px;font-weight:700;">DSM Summary</div>
+        </a>
+        <a href="credit-sales.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">🧾</div>
+          <div style="font-size:12px;font-weight:700;">Credit Sale</div>
+        </a>
+        <a href="credit-central.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">🏦</div>
+          <div style="font-size:12px;font-weight:700;">Credit Central</div>
+        </a>
+        <a href="cash-count.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">💵</div>
+          <div style="font-size:12px;font-weight:700;">Cash Count</div>
+        </a>
+        <a href="adjustments.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">⚙</div>
+          <div style="font-size:12px;font-weight:700;">Adjustments</div>
+        </a>
+        <a href="dip-entry.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">⛽</div>
+          <div style="font-size:12px;font-weight:700;">DIP Entry</div>
+        </a>
+        <a href="fuel-order.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">📦</div>
+          <div style="font-size:12px;font-weight:700;">Fuel Order</div>
+        </a>
+        <a href="shift-setup.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">💲</div>
+          <div style="font-size:12px;font-weight:700;">Set Prices</div>
+        </a>
+        <a href="quality-check.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">🧪</div>
+          <div style="font-size:12px;font-weight:700;">Quality Check</div>
+        </a>
+        <a href="export.html" class="card card--compact" style="text-align:center; padding:14px 8px; cursor:pointer;">
+          <div style="font-size:20px; margin-bottom:4px;">📤</div>
+          <div style="font-size:12px;font-weight:700;">Export Data</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bottom Nav — Manager -->
+    <nav class="bottom-nav">
+      <a href="home.html" class="nav-item nav-item--active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+      <a href="live-shift.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Shift
+      </a>
+      <a href="dsm-submissions.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Verify
+      </a>
+      <a href="settlement.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Settlement
+      </a>
+      <a href="shift-close.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Close
+      </a>
+    </nav>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+</body>
+</html>

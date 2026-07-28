@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Credit Central — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .cust-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 8px; }
+    .utilization-bar { height: 6px; border-radius: 100px; background: var(--border); overflow: hidden; margin: 6px 0 3px; }
+    .utilization-fill { height: 100%; border-radius: 100px; transition: width .3s; }
+    .txn-row { display: flex; align-items: flex-start; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .txn-row:last-child { border-bottom: none; }
+    .overdue-badge {
+      display: inline-flex; font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 4px;
+      background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Manager Home</a>
+      <div class="top-bar__title">Credit Central</div>
+      <div class="top-bar__subtitle">All credit customers in one place</div>
+    </header>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar" id="tabs">
+      <div class="tab-item tab-item--active" data-target="customers">Customers</div>
+      <div class="tab-item" data-target="transactions">Today's Sales</div>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- CUSTOMERS TAB -->
+      <div data-tab-panel="customers">
+        <!-- KPI row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px 0;">
+          <div class="kpi-tile">
+            <div class="kpi-tile__label">Total Outstanding</div>
+            <div class="kpi-tile__value" style="font-size:18px;" id="total-outstanding">—</div>
+          </div>
+          <div class="kpi-tile" style="border-color:var(--red-border);background:var(--red-bg);">
+            <div class="kpi-tile__label">Overdue Amount</div>
+            <div class="kpi-tile__value" style="font-size:18px;color:var(--red);" id="total-overdue">—</div>
+          </div>
+        </div>
+        <div class="section-label">Customer Accounts</div>
+        <div style="padding:0 16px;" id="customer-list"></div>
+      </div>
+
+      <!-- TRANSACTIONS TAB -->
+      <div data-tab-panel="transactions" class="hidden">
+        <div style="padding:12px 16px 0;">
+          <div class="alert alert--blue">
+            <span class="alert__icon">ℹ</span>
+            <span style="font-size:13px;">All credit sales recorded today across all DSMs.</span>
+          </div>
+        </div>
+        <div class="section-label">Today's Credit Sales</div>
+        <div style="padding:0 16px 16px;">
+          <div class="card" id="txn-list"></div>
+          <div class="card card--compact" style="background:var(--surface-2);margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:700;">Total Credit Sales</span>
+              <div>
+                <span style="font-weight:800;font-size:16px;color:var(--brand);" id="txn-total">—</span>
+                <span class="field-badge field-badge--auto" style="margin-left:4px;">AUTO</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.initTabs('#tabs');
+
+    const gradeStyles = { MS: { color:'#16a34a', label:'⛽ MS' }, HSD: { color:'#2563eb', label:'🛢 HSD' }, Speed: { color:'#d97706', label:'🔥 Speed' } };
+
+    // ── Customers ──
+    function renderCustomers() {
+      const totalOut = MOCK.creditCustomers.reduce((s, c) => s + c.outstanding, 0);
+      const totalOvr = MOCK.creditCustomers.reduce((s, c) => s + c.overdueAmount, 0);
+      document.getElementById('total-outstanding').textContent = PO.formatINR(totalOut);
+      document.getElementById('total-overdue').textContent = PO.formatINR(totalOvr);
+
+      document.getElementById('customer-list').innerHTML = MOCK.creditCustomers.map(c => {
+        const util = PO.calculateCreditUtilization(c.outstanding, c.limit);
+        const available = PO.calculateCreditAvailable(c.limit, c.outstanding);
+        const fillColor = util > 85 ? 'var(--red)' : util > 60 ? 'var(--amber)' : 'var(--green)';
+        const todayTxns = MOCK.creditTransactions.filter(t => t.customerId === c.id);
+        const todayAmt = todayTxns.reduce((s, t) => s + t.amount, 0);
+        return `
+          <div class="cust-card">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+              <div>
+                <div style="font-weight:800;font-size:15px;">${c.name}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${c.vehicles.length} vehicle${c.vehicles.length!==1?'s':''}</div>
+              </div>
+              ${c.overdueAmount > 0 ? `<span class="overdue-badge">${c.oldestAgeDays}d overdue</span>` : '<span class="badge badge--green">Current</span>'}
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;">
+                <span style="color:var(--text-muted);">Outstanding</span>
+                <span>${PO.formatINR(c.outstanding)} / ${PO.formatINR(c.limit)}</span>
+              </div>
+              <div class="utilization-bar">
+                <div class="utilization-fill" style="width:${util}%;background:${fillColor};"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+                <span>${util}% used</span>
+                <span>Available: ${PO.formatINR(available)}</span>
+              </div>
+            </div>
+            ${todayAmt > 0 ? `<div style="margin-top:8px;padding:6px 10px;background:var(--blue-bg);border-radius:6px;font-size:12px;font-weight:600;color:var(--blue);">Today's sales: ${PO.formatINR(todayAmt)}</div>` : ''}
+            ${c.overdueAmount > 0 ? `<div style="margin-top:6px;padding:6px 10px;background:var(--red-bg);border-radius:6px;font-size:12px;font-weight:600;color:var(--red);">Overdue: ${PO.formatINR(c.overdueAmount)}</div>` : ''}
+            <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+              ${c.vehicles.map(v => `<span style="font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-weight:600;">${v}</span>`).join('')}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Transactions ──
+    function renderTransactions() {
+      const txns = MOCK.creditTransactions;
+      const total = txns.reduce((s, t) => s + t.amount, 0);
+      document.getElementById('txn-total').textContent = PO.formatINR(total);
+      document.getElementById('txn-list').innerHTML = txns.length ? txns.map(t => {
+        const gs = gradeStyles[t.product] || {};
+        return `
+          <div class="txn-row">
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:13px;">${t.vehicle}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${t.dsm} · ${t.time} · <span style="color:${gs.color||'inherit'};font-weight:700;">${gs.label||t.product}</span></div>
+              <div style="font-size:11px;color:var(--text-muted);">${t.qty.toFixed(2)} L × ₹${t.rate}/L</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-weight:800;font-size:14px;">${PO.formatINR(t.amount)}</div>
+            </div>
+          </div>`;
+      }).join('') : '<div style="text-align:center;padding:16px;color:var(--text-muted);">No credit sales today</div>';
+    }
+
+    renderCustomers();
+    renderTransactions();
+  </script>
+</body>
+</html>

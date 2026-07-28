@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Credit Overview — PumpOps Owner</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="dashboard.html" class="top-bar__back">← Dashboard</a>
+      <div class="top-bar__title">Credit Ledger</div>
+      <div class="top-bar__subtitle" id="total-outstanding">Total outstanding: —</div>
+    </header>
+
+    <div class="filter-bar">
+      <span class="filter-pill filter-pill--active">All</span>
+      <span class="filter-pill">Overdue</span>
+      <span class="filter-pill">0–7d</span>
+      <span class="filter-pill">7–30d</span>
+      <span class="filter-pill">30d+</span>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+      <div style="padding:8px 16px;display:flex;flex-direction:column;gap:10px;" id="credit-list"></div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const customers = MOCK.creditCustomers;
+    const totalOut = customers.reduce((s, c) => s + c.outstanding, 0);
+    document.getElementById('total-outstanding').textContent = 'Total outstanding: ' + PO.formatINR(totalOut);
+
+    const list = document.getElementById('credit-list');
+    list.innerHTML = customers.map(c => {
+      const util = PO.calculateCreditUtilization(c.outstanding, c.limit);
+      const avail = PO.calculateCreditAvailable(c.limit, c.outstanding);
+      const ageColor = c.oldestAgeDays > 30 ? 'var(--red)' : c.oldestAgeDays > 7 ? 'var(--amber)' : 'var(--green)';
+      return `
+        <div class="card ${c.overdueAmount > 0 ? 'card--alert-red' : ''}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+            <div>
+              <div style="font-size:14px;font-weight:800;">${c.name}</div>
+              <div style="font-size:11px;color:var(--text-muted);">Oldest: <span style="color:${ageColor};font-weight:600;">${c.oldestAgeDays}d</span></div>
+            </div>
+            ${c.overdueAmount > 0 ? `<span class="badge badge--red">OVERDUE</span>` : `<span class="badge badge--green">OK</span>`}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;margin-bottom:10px;">
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);">Outstanding</div>
+              <div style="font-size:15px;font-weight:800;color:${c.outstanding>c.limit*0.8?'var(--amber)':'var(--text-primary)'};">${(c.outstanding/1000).toFixed(1)}k</div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);">Limit</div>
+              <div style="font-size:15px;font-weight:800;">${(c.limit/1000).toFixed(0)}k</div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);">Available</div>
+              <div style="font-size:15px;font-weight:800;color:var(--green);">${(avail/1000).toFixed(1)}k</div>
+            </div>
+          </div>
+          <div style="margin-bottom:6px;">
+            <div class="progress-bar">
+              <div class="progress-bar__fill ${util>=90?'progress-bar__fill--red':util>=75?'progress-bar__fill--amber':''}" style="width:${Math.min(100,util)}%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Utilization: ${util}%</div>
+          </div>
+          ${c.overdueAmount > 0 ? `<div class="alert alert--red" style="padding:6px 10px;"><span>⚠</span><span style="font-size:12px;margin-left:4px;">Overdue: ${PO.formatINR(c.overdueAmount)}</span></div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    APP.initFilterPills('.filter-bar');
+  </script>
+</body>
+</html>

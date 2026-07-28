@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Digital Settlement — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__title">Digital Settlement</div>
+      <div class="top-bar__subtitle">T+1 Gateway Reconciliation · 27 Jul 2026</div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+      <div class="alert alert--blue" style="margin:12px 16px 0;">
+        <span class="alert__icon">ℹ</span>
+        <span style="font-size:13px;">Compare PumpOps system totals against gateway reports and bank settlements. Differences are highlighted automatically.</span>
+      </div>
+
+      <!-- Summary -->
+      <div style="padding:10px 16px 0;">
+        <div class="card card--compact" style="background:var(--surface-2);">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">System Total</div>
+              <div style="font-size:16px;font-weight:800;margin-top:2px;" id="sys-total">₹2,20,200</div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Bank Settled</div>
+              <div style="font-size:16px;font-weight:800;margin-top:2px;" id="bank-total">₹2,20,050</div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Difference</div>
+              <div style="font-size:16px;font-weight:800;margin-top:2px;color:var(--amber);" id="net-diff">−₹150</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gateway rows -->
+      <div class="section-label">Gateway Breakdown</div>
+      <div style="padding:0 16px; display:flex; flex-direction:column; gap:8px;" id="gw-list"></div>
+
+      <div class="btn-row">
+        <a href="home.html" class="btn btn--ghost">Back</a>
+        <button class="btn btn--primary" onclick="APP.showToast('Settlement saved','success')">Save Settlement</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    function renderGateways() {
+      const list = document.getElementById('gw-list');
+      list.innerHTML = MOCK.gateways.map(gw => {
+        const diff = PO.calculateSettlementDifference(gw.gatewayAmt, gw.bankSettled);
+        const adj  = PO.calculateAdjustedSettlement(gw.gatewayAmt, gw.after12Current, gw.after12Prev);
+        const diffColor = diff === 0 ? 'var(--green)' : Math.abs(diff) < 100 ? 'var(--amber)' : 'var(--red)';
+        const diffIcon  = diff === 0 ? '✓' : '⚠';
+        return `
+          <div class="card card--compact" style="${Math.abs(diff)>0?'border-left:3px solid '+diffColor:''}">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:14px;font-weight:800;">${gw.name}</span>
+              <span style="font-size:14px;font-weight:800;color:${diffColor};">${diffIcon} ${diff===0?'Balanced':PO.formatINR(diff)}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div>
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.04em;">System</div>
+                <div style="font-size:14px;font-weight:700;">${PO.formatINR(gw.systemAmt)}</div>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.04em;">Bank Settled</div>
+                <div style="font-size:14px;font-weight:700;">${PO.formatINR(gw.bankSettled)}</div>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.04em;">After 12AM (+prev)</div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-secondary);">−${PO.formatINR(gw.after12Current)} / +${PO.formatINR(gw.after12Prev)}</div>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.04em;">Adj. Receivable</div>
+                <div style="font-size:14px;font-weight:700;color:var(--brand);">${PO.formatINR(adj)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderGateways();
+  </script>
+</body>
+</html>

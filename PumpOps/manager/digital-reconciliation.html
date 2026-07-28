@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Digital Reconciliation — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__title">T+1 Reconciliation</div>
+      <div class="top-bar__subtitle">Verify bank settlements · 27 Jul 2026</div>
+    </header>
+    <div class="page-content page-content--no-nav">
+      <div style="padding:12px 16px 0; display:flex;flex-direction:column;gap:10px;">
+        <div class="alert alert--blue">
+          <span class="alert__icon">ℹ</span>
+          <span style="font-size:13px;">Check your banking app or portal and compare settled amounts against PumpOps system totals.</span>
+        </div>
+      </div>
+      <div style="padding:8px 16px; display:flex;flex-direction:column;gap:10px;" id="recon-list"></div>
+    </div>
+  </div>
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    const list = document.getElementById('recon-list');
+    MOCK.gateways.forEach(gw => {
+      const diff = PO.calculateSettlementDifference(gw.gatewayAmt, gw.bankSettled);
+      const borderColor = diff === 0 ? 'var(--green)' : Math.abs(diff) < 100 ? 'var(--amber)' : 'var(--red)';
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.style.borderLeft = '3px solid ' + borderColor;
+      el.innerHTML = `
+        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">${gw.name}</div>
+        <div class="row"><span class="row__label">PumpOps System</span><span class="row__value">${PO.formatINR(gw.systemAmt)}</span></div>
+        <div class="row"><span class="row__label">Gateway Sale</span><input type="number" style="width:120px;border:1.5px solid var(--border-mid);border-radius:6px;padding:4px 8px;font-size:14px;font-weight:600;text-align:right;" value="${gw.gatewayAmt}" /></div>
+        <div class="row"><span class="row__label">Bank Settled</span><input type="number" style="width:120px;border:1.5px solid var(--border-mid);border-radius:6px;padding:4px 8px;font-size:14px;font-weight:600;text-align:right;" value="${gw.bankSettled}" /></div>
+        <div class="row" style="border-bottom:none;">
+          <span class="row__label fw-700">Difference</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:16px;font-weight:800;color:${borderColor};">${diff===0?'✓ 0':'⚠ '+PO.formatINR(diff)}</span>
+            <span class="field-badge field-badge--auto">AUTO</span>
+          </div>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+  </script>
+</body>
+</html>

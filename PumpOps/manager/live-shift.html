@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Live Shift — PumpOps Manager</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar top-bar--compact">
+      <a href="home.html" class="top-bar__back">← Home</a>
+      <div class="top-bar__title">Live Shift Monitor</div>
+      <div class="top-bar__subtitle">Morning Shift · <span class="js-clock"></span> · 6 DSMs</div>
+    </header>
+
+    <!-- KPI Row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 16px;background:var(--surface-2);border-bottom:1px solid var(--border);">
+      <div style="text-align:center;">
+        <div style="font-size:18px;font-weight:800;color:var(--brand);">₹4.19L</div>
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Sales</div>
+      </div>
+      <div style="display:flex;flex-direction:column;font-size:10px;justify-content:center;line-height:1.25;text-align:left;padding-left:10px;">
+        <div><span style="color:#16a34a;font-weight:700;">Petrol:</span> <span style="font-weight:800;">1,573 L</span></div>
+        <div><span style="color:#d97706;font-weight:700;">Speed:</span> <span style="font-weight:800;">320 L</span></div>
+        <div><span style="color:#2563eb;font-weight:700;">Diesel:</span> <span style="font-weight:800;">1,931 L</span></div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:18px;font-weight:800;color:var(--amber);">1</div>
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Pending</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-bar">
+      <span class="filter-pill filter-pill--active" data-value="all">All</span>
+      <span class="filter-pill" data-value="operating">Operating</span>
+      <span class="filter-pill" data-value="submitted">Submitted</span>
+      <span class="filter-pill" data-value="review">Needs Review</span>
+      <span class="filter-pill" data-value="verified">Verified</span>
+    </div>
+
+    <div class="page-content page-content--no-nav">
+      <div style="padding:0 16px; display:flex; flex-direction:column; gap:8px; padding-top:4px;">
+
+        <!-- SUBMITTED — needs review -->
+        <div class="card" style="border-left:3px solid var(--amber);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="dsm-card__avatar">AK</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:14px;font-weight:700;">Amit Kumar</div>
+                <span class="badge badge--amber">SUBMITTED</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">MPD 01 · N01 MS · N02 HSD</div>
+              <div style="font-size:12px;margin-top:4px;">
+                <span class="fw-700 text-brand">₹97,654.48</span>
+              </div>
+              <!-- Grade-wise litres -->
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;">
+                <span style="font-size:11px;font-weight:700;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:2px 7px;">⛽ 359 L MS</span>
+                <span style="font-size:11px;font-weight:700;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:2px 7px;">🛢 650 L HSD</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:6px;">
+            <a href="dsm-verification.html" class="btn btn--primary btn--sm" style="flex:1;">Verify Now</a>
+            <button class="btn btn--ghost btn--sm" style="flex:1;">View Readings</button>
+          </div>
+        </div>
+
+        <!-- ACTIVE -->
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="dsm-card__avatar">SP</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:14px;font-weight:700;">Sachin Patil</div>
+                <span class="badge badge--blue">OPERATING</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">MPD 02 · N03 HSD · N04 MS</div>
+              <div style="font-size:12px;margin-top:4px;color:var(--text-muted);">Started 06:05 AM · <span id="elapsed-sp" style="font-weight:700;color:var(--brand);"></span></div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">🧪 Last quality check: <span style="font-weight:600;color:#d97706;">08:30 AM (2h ago)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VERIFIED -->
+        <div class="card" style="border-left:3px solid var(--green);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="dsm-card__avatar" style="background:var(--green-bg);color:var(--green);">OS</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:14px;font-weight:700;">Omkar Shinde</div>
+                <span class="badge badge--green">VERIFIED</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">MPD 03 · N05 Speed · N06 MS</div>
+              <div style="font-size:12px;margin-top:4px;">
+                <span class="fw-700">₹48,650.00</span>
+                <span class="text-muted" style="margin-left:6px;">· Diff: </span>
+                <span style="font-size:12px;font-weight:700;color:var(--red);">−₹250 Short</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <a href="dsm-verification.html" class="btn btn--ghost btn--sm" style="display:inline-block;">View Details</a>
+          </div>
+        </div>
+
+        <!-- ACTIVE DSMs Evening -->
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="dsm-card__avatar">PN</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:14px;font-weight:700;">Priya Nair</div>
+                <span class="badge badge--blue">OPERATING</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">MPD 01 · N01 MS</div>
+              <div style="font-size:12px;margin-top:4px;color:var(--text-muted);">Started 14:02 PM</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="dsm-card__avatar" style="background:var(--amber-bg);color:var(--amber);">RK</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:14px;font-weight:700;">Ravi Kulkarni</div>
+                <span class="badge badge--blue">OPERATING</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">MPD 02 · N04 MS</div>
+              <div style="font-size:12px;margin-top:4px;color:var(--amber);font-weight:600;">⚠ Late in — 14:08</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="dsm-card__avatar">DM</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:14px;font-weight:700;">Deepak More</div>
+                <span class="badge badge--blue">OPERATING</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:1px;">MPD 03 · N05 Speed · N06 MS</div>
+              <div style="font-size:12px;margin-top:4px;color:var(--text-muted);">Started 14:00 PM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.startClock('.js-clock');
+    APP.initFilterPills('.filter-bar');
+  </script>
+</body>
+</html>

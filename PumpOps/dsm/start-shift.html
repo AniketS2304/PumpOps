@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Start Shift — PumpOps DSM</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <style>
+    .mpd-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .mpd-tile {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .mpd-tile.selected { border-color: var(--brand); background: var(--brand-light); }
+    .mpd-tile__id { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+    .mpd-tile__nozzles { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+    .bay-toggle {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px; font-weight: 600;
+      transition: all .15s;
+      user-select: none;
+    }
+    .bay-toggle.selected { border-color: var(--brand); background: var(--brand-light); color: var(--brand); }
+    .nozzle-preview { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .reading-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .reading-card__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+    }
+    .reading-card__body { padding: 12px 14px; }
+    .shift-pill {
+      padding: 6px 14px; border-radius: 100px;
+      font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--border);
+      cursor: pointer; color: var(--text-secondary);
+      background: var(--surface); transition: all .15s;
+    }
+    .shift-pill.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .locked { pointer-events: none; opacity: .55; }
+    .step-dot-wrap { display: flex; align-items: center; gap: 0; margin: 0 16px 4px; }
+    .step-dot-item { display:flex; flex-direction:column; align-items:center; flex:1; }
+    .step-dot-circle {
+      width:28px; height:28px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:700;
+      background: var(--surface-2); color:var(--text-muted);
+      border: 2px solid var(--border-mid); transition: all .2s;
+    }
+    .step-dot-circle.active { background: var(--brand); color:#fff; border-color:var(--brand); }
+    .step-dot-circle.done { background: var(--green); color:#fff; border-color:var(--green); }
+    .step-dot-label { font-size:9px; font-weight:600; color:var(--text-muted); margin-top:3px; text-align:center; }
+    .step-connector { flex:1; height:2px; background:var(--border); margin-bottom:14px; }
+    .step-connector.done { background: var(--green); }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <header class="top-bar">
+      <a href="../login.html" class="top-bar__back">← Sign Out</a>
+      <div class="top-bar__meta" style="margin-top:4px;">
+        <div>
+          <div class="top-bar__station">SPS Bharat Petroleum · Pune</div>
+          <div class="top-bar__title" id="greeting-name">Good morning, Amit</div>
+          <div class="top-bar__subtitle"><span class="js-time"></span></div>
+        </div>
+        <span class="top-bar__role">DSM</span>
+      </div>
+    </header>
+
+    <div class="page-content page-content--no-nav">
+
+      <!-- Progress Dots -->
+      <div class="step-dot-wrap" style="margin-top:14px;">
+        <div class="step-dot-item">
+          <div class="step-dot-circle active" id="sp1">1</div>
+          <div class="step-dot-label">Shift</div>
+        </div>
+        <div class="step-connector" id="sc1"></div>
+        <div class="step-dot-item">
+          <div class="step-dot-circle" id="sp2">2</div>
+          <div class="step-dot-label">MPD&Bay</div>
+        </div>
+        <div class="step-connector" id="sc2"></div>
+        <div class="step-dot-item">
+          <div class="step-dot-circle" id="sp3">3</div>
+          <div class="step-dot-label">Readings</div>
+        </div>
+        <div class="step-connector" id="sc3"></div>
+        <div class="step-dot-item">
+          <div class="step-dot-circle" id="sp4">▶</div>
+          <div class="step-dot-label">Start</div>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 1: Shift Details ═══ -->
+      <div id="sec-shift">
+        <div class="section-label">Step 1 — Shift Details</div>
+        <div style="padding:0 16px;">
+          <div class="card">
+            <div class="row">
+              <span class="row__label">Station</span>
+              <span class="row__value">SPS Bharat Petroleum</span>
+            </div>
+            <div class="row">
+              <span class="row__label">Date</span>
+              <span class="row__value" id="shift-date">—</span>
+            </div>
+            <div class="row" style="flex-direction:column;align-items:flex-start;gap:8px;border-bottom:none;">
+              <span class="row__label">Shift <span style="color:var(--text-muted);font-weight:400;">(optional — choose your shift)</span></span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;" id="shift-pills">
+                <span class="shift-pill active" data-shift="Morning" data-start="06:00" data-end="14:00" onclick="selectShift(this)">Morning · 06–14</span>
+                <span class="shift-pill" data-shift="Evening" data-start="14:00" data-end="22:00" onclick="selectShift(this)">Evening · 14–22</span>
+                <span class="shift-pill" data-shift="Night" data-start="22:00" data-end="06:00" onclick="selectShift(this)">Night · 22–06</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="intime-banner" class="hidden" style="margin:8px 16px 0;">
+          <div class="alert alert--green">
+            <span class="alert__icon">✓</span>
+            <div>
+              <strong>In-Time recorded: <span id="intime-value"></span></strong>
+              <div style="font-size:11px;margin-top:2px;">Select MPD and Bay to continue.</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px 16px 0;">
+          <button class="btn btn--primary" id="btn-record-intime" onclick="recordInTime()">📍 Record In-Time &amp; Continue</button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 2: MPD & Bay ═══ -->
+      <div id="sec-mpd" class="hidden" style="margin-top:4px;">
+        <div class="section-label">Step 2 — Select MPD &amp; Bay</div>
+        <div style="padding:0 16px;">
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">Select MPD (Multi-Product Dispenser)</label>
+              <div class="mpd-grid" id="mpd-grid"></div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Select Bay(s)</label>
+              <div style="display:flex;gap:8px;margin-top:6px;">
+                <label class="bay-toggle selected" id="bay1-toggle" onclick="toggleBay(1)">&#10003; Bay 1</label>
+                <label class="bay-toggle selected" id="bay2-toggle" onclick="toggleBay(2)">&#10003; Bay 2</label>
+              </div>
+            </div>
+          </div>
+          <div class="card card--compact" style="margin-top:8px;">
+            <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Assigned Nozzles</div>
+            <div class="nozzle-preview" id="nozzle-preview"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--ghost" onclick="showSection('shift')">← Back</button>
+          <button class="btn btn--primary" onclick="showSection('readings'); renderReadingsForm();">Continue to Readings →</button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 3: Opening Readings ═══ -->
+      <div id="sec-readings" class="hidden" style="margin-top:4px;">
+        <div class="section-label">Step 3 — Enter Opening Readings</div>
+        <div style="padding:0 16px;">
+          <div class="alert alert--blue" style="margin-bottom:10px;">
+            <span class="alert__icon">ℹ</span>
+            <span style="font-size:13px;">Opening reading must match previous shift's closing. Confirm each nozzle.</span>
+          </div>
+          <div id="readings-container"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--ghost" onclick="showSection('mpd')">← Back</button>
+          <button class="btn btn--primary" onclick="showSection('start'); buildConfirmView();">Review &amp; Start →</button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 4: Confirm & Start ═══ -->
+      <div id="sec-start" class="hidden" style="margin-top:4px;">
+        <div class="section-label">Step 4 — Confirm &amp; Start Shift</div>
+        <div style="padding:0 16px;">
+          <div class="card">
+            <div class="row">
+              <span class="row__label">In-Time</span>
+              <span class="row__value fw-700 text-green" id="confirm-intime">—</span>
+            </div>
+            <div class="row">
+              <span class="row__label">Shift</span>
+              <span class="row__value" id="confirm-shift">—</span>
+            </div>
+            <div class="row">
+              <span class="row__label">MPD</span>
+              <span class="row__value fw-700 text-brand" id="confirm-mpd">—</span>
+            </div>
+            <div class="row">
+              <span class="row__label">Bays</span>
+              <span class="row__value" id="confirm-bays">—</span>
+            </div>
+            <div class="row" style="border-bottom:none;flex-wrap:wrap;gap:6px;">
+              <span class="row__label">Nozzles</span>
+              <div id="confirm-nozzles" class="nozzle-preview" style="justify-content:flex-end;"></div>
+            </div>
+          </div>
+          <div class="section-label" style="padding:12px 0 4px;">Opening Readings</div>
+          <div class="card card--compact" id="reading-summary"></div>
+          <div class="alert alert--amber" style="margin-top:8px;">
+            <span class="alert__icon">⚠</span>
+            <span style="font-size:12px;">After starting, you cannot edit these readings. Verify before proceeding.</span>
+          </div>
+        </div>
+        <div style="padding:16px 16px 0;">
+          <button class="btn btn--success" onclick="startShift()">⛽ START SHIFT</button>
+          <button class="btn btn--ghost" style="margin-top:8px;" onclick="showSection('readings')">← Back to Readings</button>
+        </div>
+      </div>
+
+      <!-- ═══ Shift Active Confirmation ═══ -->
+      <div id="sec-active" class="hidden">
+        <div style="padding:20px 16px;">
+          <div class="alert alert--green">
+            <span class="alert__icon">✓</span>
+            <div>
+              <strong>Shift Started!</strong>
+              <div style="font-size:12px;margin-top:2px;">In-Time &amp; opening readings saved. You're ready to operate.</div>
+            </div>
+          </div>
+          <div class="card card--compact" style="margin-top:12px;" id="active-summary"></div>
+          <a href="home.html" class="btn btn--primary" style="margin-top:16px;">Go to DSM Home →</a>
+          <a href="credit-entry.html" class="btn btn--ghost" style="margin-top:8px;">➕ Add Credit Customer</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/app.js"></script>
+  <script>
+    APP.startClock('.js-time');
+
+    let selectedMpd = 'MPD01';
+    let selectedBays = [1, 2];
+    let inTime = null;
+    let selectedShift = { label: 'Morning', start: '06:00', end: '14:00' };
+    let nozzleReadings = {};
+
+    (function init() {
+      const d = new Date();
+      document.getElementById('shift-date').textContent =
+        d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'short', year:'numeric' });
+      document.getElementById('greeting-name').textContent = APP.greetingPrefix() + ', Amit';
+      renderMpdGrid();
+      updateNozzlePreview();
+    })();
+
+    function selectShift(el) {
+      document.querySelectorAll('.shift-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      selectedShift = { label: el.dataset.shift, start: el.dataset.start, end: el.dataset.end };
+    }
+
+    function recordInTime() {
+      inTime = APP.nowAmPm();
+      document.getElementById('intime-value').textContent = inTime;
+      document.getElementById('intime-banner').classList.remove('hidden');
+      const btn = document.getElementById('btn-record-intime');
+      btn.textContent = '✓ In-Time Recorded';
+      btn.className = 'btn btn--success';
+      btn.onclick = null;
+      document.querySelectorAll('.shift-pill').forEach(p => p.classList.add('locked'));
+      setTimeout(() => showSection('mpd'), 500);
+    }
+
+    function renderMpdGrid() {
+      const grid = document.getElementById('mpd-grid');
+      grid.innerHTML = MOCK.mpds.map(mpd => {
+        const nLabel = mpd.nozzles.map(n => n.label + ' ' + n.grade).join(', ');
+        return `<div class="mpd-tile ${mpd.id === selectedMpd ? 'selected' : ''}" onclick="selectMpd('${mpd.id}',this)">
+          <div class="mpd-tile__id">${mpd.label}</div>
+          <div class="mpd-tile__nozzles">${nLabel}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function selectMpd(id, el) {
+      document.querySelectorAll('.mpd-tile').forEach(t => t.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedMpd = id;
+      updateNozzlePreview();
+    }
+
+    function toggleBay(num) {
+      const idx = selectedBays.indexOf(num);
+      if (idx >= 0) {
+        if (selectedBays.length === 1) { APP.showToast('Select at least one bay', 'warn'); return; }
+        selectedBays.splice(idx, 1);
+        document.getElementById('bay' + num + '-toggle').classList.remove('selected');
+        document.getElementById('bay' + num + '-toggle').textContent = 'Bay ' + num;
+      } else {
+        selectedBays.push(num);
+        document.getElementById('bay' + num + '-toggle').classList.add('selected');
+        document.getElementById('bay' + num + '-toggle').textContent = '✓ Bay ' + num;
+      }
+    }
+
+    function updateNozzlePreview() {
+      const nozzles = APP.getNozzlesForMpd(selectedMpd);
+      document.getElementById('nozzle-preview').innerHTML = nozzles.map(n =>
+        `<span class="badge ${APP.getGradeBadgeClass(n.grade)}">${n.label} ${n.grade}</span>`
+      ).join('');
+    }
+
+    function renderReadingsForm() {
+      const nozzles = APP.getNozzlesForMpd(selectedMpd);
+      document.getElementById('readings-container').innerHTML = nozzles.map(n => {
+        const prev = n.prevClose;
+        const saved = nozzleReadings[n.id] !== undefined ? nozzleReadings[n.id] : prev;
+        return `
+          <div class="reading-card">
+            <div class="reading-card__header">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="badge ${APP.getGradeBadgeClass(n.grade)}">${n.grade}</span>
+                <span style="font-weight:700;">${n.label} — ${n.id}</span>
+              </div>
+              <span style="font-size:11px;color:var(--text-muted);">Tank: ${n.tank}</span>
+            </div>
+            <div class="reading-card__body">
+              <div class="form-group" style="margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <label class="form-label" style="margin:0;">Previous Closing</label>
+                  <span class="field-badge field-badge--prev">PREV SHIFT</span>
+                </div>
+                <div class="source-field">
+                  <span class="source-field__value">${prev.toLocaleString('en-IN',{minimumFractionDigits:2})}</span>
+                  <span style="font-size:12px;color:var(--text-muted);">Litres</span>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:6px;">
+                <label class="form-label">Opening Reading <span style="color:var(--red);">*</span></label>
+                <input type="number" class="form-input" id="open-${n.id}" value="${saved.toFixed(2)}"
+                       step="0.01" oninput="validateReading('${n.id}',${prev})" />
+              </div>
+              <div id="match-${n.id}" class="alert alert--green" style="padding:6px 10px;">
+                <span>✓</span> <span style="font-size:12px;">Matches previous shift closing</span>
+              </div>
+              <div id="mismatch-${n.id}" class="alert alert--amber hidden" style="padding:6px 10px;">
+                <span>⚠</span> <span style="font-size:12px;">Differs — enter reason</span>
+              </div>
+              <div id="reason-${n.id}" class="hidden" style="margin-top:6px;">
+                <input type="text" class="form-input" placeholder="Reason for difference (required)" style="font-size:13px;" />
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function validateReading(nozzleId, prevClose) {
+      const val = parseFloat(document.getElementById('open-' + nozzleId).value);
+      if (isNaN(val)) return;
+      const differs = Math.abs(val - prevClose) > 0.01;
+      document.getElementById('match-' + nozzleId).classList.toggle('hidden', differs);
+      document.getElementById('mismatch-' + nozzleId).classList.toggle('hidden', !differs);
+      document.getElementById('reason-' + nozzleId).classList.toggle('hidden', !differs);
+      nozzleReadings[nozzleId] = val;
+    }
+
+    function showSection(sec) {
+      ['shift','mpd','readings','start','active'].forEach(s =>
+        document.getElementById('sec-' + s).classList.add('hidden'));
+      document.getElementById('sec-' + sec).classList.remove('hidden');
+      updateDots(sec);
+      window.scrollTo(0, 0);
+    }
+
+    function updateDots(sec) {
+      const order = ['shift','mpd','readings','start'];
+      const cur = order.indexOf(sec);
+      ['sp1','sp2','sp3','sp4'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.className = 'step-dot-circle';
+        if (i < cur) { el.classList.add('done'); el.textContent = '✓'; }
+        else if (i === cur) { el.classList.add('active'); el.textContent = i === 3 ? '▶' : (i+1); }
+        else { el.textContent = i === 3 ? '▶' : (i+1); }
+      });
+      ['sc1','sc2','sc3'].forEach((id, i) =>
+        document.getElementById(id).className = 'step-connector' + (i < cur ? ' done' : ''));
+    }
+
+    function buildConfirmView() {
+      const mpd = MOCK.mpds.find(m => m.id === selectedMpd);
+      document.getElementById('confirm-intime').textContent = inTime || APP.nowAmPm();
+      document.getElementById('confirm-shift').textContent = `${selectedShift.label} · ${selectedShift.start} – ${selectedShift.end}`;
+      document.getElementById('confirm-mpd').textContent = mpd ? mpd.label : selectedMpd;
+      document.getElementById('confirm-bays').textContent = selectedBays.sort().map(b => 'Bay ' + b).join(' & ');
+      const nozzles = APP.getNozzlesForMpd(selectedMpd);
+      document.getElementById('confirm-nozzles').innerHTML = nozzles.map(n =>
+        `<span class="badge ${APP.getGradeBadgeClass(n.grade)}">${n.label} ${n.grade}</span>`).join('');
+      document.getElementById('reading-summary').innerHTML = nozzles.map(n => {
+        const val = nozzleReadings[n.id] !== undefined ? nozzleReadings[n.id] : n.prevClose;
+        return `<div class="row" style="border-bottom:none;padding:4px 0;">
+          <span class="row__label">${n.label} — ${n.grade}</span>
+          <span class="row__value fw-700">${val.toLocaleString('en-IN',{minimumFractionDigits:2})} L</span>
+        </div>`;
+      }).join('');
+    }
+
+    function startShift() {
+      const nozzles = APP.getNozzlesForMpd(selectedMpd);
+      const readings = {};
+      nozzles.forEach(n => {
+        readings[n.id] = parseFloat(document.getElementById('open-' + n.id)?.value) || n.prevClose;
+      });
+      const t = inTime || APP.nowAmPm();
+      APP.setState({
+        mpdId: selectedMpd,
+        mpdLabel: MOCK.mpds.find(m => m.id === selectedMpd)?.label || selectedMpd,
+        bays: selectedBays,
+        nozzleIds: nozzles.map(n => n.id),
+        inTime: t,
+        shiftLabel: selectedShift.label,
+        shiftStart: selectedShift.start,
+        shiftEnd: selectedShift.end,
+        started: true,
+      });
+      APP.saveReadings(readings);
+      APP.showToast('Shift started! Opening readings saved.', 'success');
+      const mpd = MOCK.mpds.find(m => m.id === selectedMpd);
+      document.getElementById('active-summary').innerHTML = `
+        <div class="row"><span class="row__label">In-Time</span><span class="row__value fw-700 text-green">${t}</span></div>
+        <div class="row"><span class="row__label">MPD</span><span class="row__value fw-700 text-brand">${mpd?.label||selectedMpd}</span></div>
+        <div class="row"><span class="row__label">Bays</span><span class="row__value">${selectedBays.sort().map(b=>'Bay '+b).join(' & ')}</span></div>
+        <div class="row" style="border-bottom:none;"><span class="row__label">Shift</span><span class="row__value">${selectedShift.label} · ${selectedShift.start} – ${selectedShift.end}</span></div>`;
+      showSection('active');
+    }
+  </script>
+</body>
+</html>
